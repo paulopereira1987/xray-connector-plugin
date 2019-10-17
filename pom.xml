@@ -9,9 +9,10 @@
 		<version>2.11</version>
 		<relativePath />
 	</parent>
-	
+
+	<groupId>org.jenkins-ci.plugins</groupId>
 	<artifactId>xray-connector</artifactId>
-	<version>2.0.1</version>
+	<version>2.1.0</version>
 	<packaging>hpi</packaging>
 
 	<properties>
@@ -21,9 +22,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<name>Xray for Jira Jenkins Plugin</name>
-	<description>Integrates Jenkins with Xray for Jira</description>
-	<url>http://confluence.xpand-addons.com/display/XRAY/Xray+for+JIRA+Jenkins+Plugin</url>
+	<name>Xray Connector Plugin</name>
+	<description>Integrates Jenkins with Xray</description>
+	<url>https://wiki.jenkins.io/display/JENKINS/Xray+Connector+Plugin</url>
 
 	<licenses>
 		<license>
@@ -51,7 +52,7 @@
 		<dependency>
 			<groupId>com.xpandit.xray</groupId>
 			<artifactId>client-core</artifactId>			
-    		<version>2.0.1</version>
+    		<version>2.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>
@@ -96,7 +97,12 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>2.9.10</version>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins/credentials -->
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>credentials</artifactId>
+			<version>2.1.10</version>
+		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>junit</artifactId>
@@ -133,7 +139,7 @@
 	          <artifactId>maven-surefire-plugin</artifactId>
 	          <version>2.19.1</version>
 	        </plugin>
-  		</plugins>
+        </plugins>
 	</build>
 	
 	<repositories>

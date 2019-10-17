@@ -3,7 +3,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
          
-  <script src="${resURL}/plugin/xray-for-jira-connector/handlebars-v4.0.5.amd.min.js"></script>         
+  <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>         
   
   ${descriptor.setBuildID()}   
  
@@ -18,7 +18,7 @@
 
   <j:file xmlns:j="jelly:core" var="addSameExecutionCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
 	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing multiple execution report files using a glob expression, the results will be imported to the same Test Execution">
-		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution() != null ? instance.isImportToSameExecution() : true}"/>
+		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
 	  </f:entry>
   </j:file>
 
@@ -182,7 +182,7 @@
 	  Q(document).ready(function() {
 	  		// Main template loading. It's syntax conflicts with Jelly so we need to load it asynchronously from an external source
 			Q.ajax({
-		   	 url: '${resURL}/plugin/xray-for-jira-connector/xray-import-buildstepconfig.html',
+		   	 url: '${resURL}/plugin/xray-connector/xray-import-buildstepconfig.html',
 		     cache: false,
 		     dataType: "html",
 		     success: function(data) {
