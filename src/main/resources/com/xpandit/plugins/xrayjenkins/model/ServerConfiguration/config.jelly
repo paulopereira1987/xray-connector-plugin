@@ -7,6 +7,7 @@
 
 					<j:if test="${!empty(serverInstances.configID)}">
 						<f:entry title="${%Configuration ID}" field="configID" >
+							<f:textbox value="${serverInstances.configID}" clazz="raven-hidden"/>
 							${serverInstances.configID}
 						</f:entry>
 					</j:if>
@@ -43,6 +44,12 @@
 			</f:repeatable>
 		</f:entry>
 	</f:section>
+
+	<style>
+		.raven-hidden {
+			display: none;
+		}
+	</style>
 	
 	<script>
 		(function(Q){
