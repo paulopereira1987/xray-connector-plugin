@@ -8,6 +8,7 @@
 package com.xpandit.plugins.xrayjenkins.task;
 
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
@@ -174,9 +175,9 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         
         try {
             final EnvVars env = build.getEnvironment(listener);
-            final String expandedIssues = TaskUtils.expandVariable(env, issues);
-            final String expandedFilter = TaskUtils.expandVariable(env, filter);
-            final String expandedFilePath = TaskUtils.expandVariable(env, filePath);
+            final String expandedIssues = EnvironmentVariableUtil.expandVariable(env, issues);
+            final String expandedFilter = EnvironmentVariableUtil.expandVariable(env, filter);
+            final String expandedFilePath = EnvironmentVariableUtil.expandVariable(env, filePath);
             
             if (StringUtils.isNotBlank(expandedIssues)) {
                 listener.getLogger().println("Issues: " + expandedIssues);
