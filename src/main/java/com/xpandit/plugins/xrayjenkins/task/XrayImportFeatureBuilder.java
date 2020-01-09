@@ -16,6 +16,7 @@ import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
+import com.xpandit.plugins.xrayjenkins.services.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.filefilters.OnlyFeatureFilesInPathFilter;
 import com.xpandit.xray.exception.XrayClientCoreGenericException;
 import com.xpandit.xray.model.FileStream;
@@ -38,6 +39,7 @@ import hudson.util.ListBoxModel;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -120,14 +122,17 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
         if(xrayInstance == null){
             listener.getLogger().println("The server instance is null");
+            addFailedOpEnvironmentVariables(run, "The server instance is null");
             throw new AbortException();
         }
         if (StringUtils.isBlank(this.projectKey)) {
             listener.getLogger().println("You must provide the project key");
+            addFailedOpEnvironmentVariables(run, "You must provide the project key");
             throw new AbortException();
         }
         if(StringUtils.isBlank(this.folderPath)){
             listener.getLogger().println("You must provide the directory path");
+            addFailedOpEnvironmentVariables(run, "You must provide the directory path");
             throw new AbortException();
         }
         
@@ -141,16 +146,20 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
                     xrayInstance.getCredential(run).getPassword(),
                     proxyBean);
         } else {
+            addFailedOpEnvironmentVariables(run, "Hosting type not recognized.");
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
 
-        processImport(workspace, client, listener);
+        processImport(run, workspace, client, listener, xrayInstance);
 
     }
 
-    private void processImport(final FilePath workspace,
-                          final XrayTestImporter client,
-                          final TaskListener listener) throws IOException, InterruptedException {
+    private void processImport(
+            final Run<?, ?> run,
+            final FilePath workspace,
+            final XrayTestImporter client,
+            final TaskListener listener,
+            final XrayInstance instance) throws IOException, InterruptedException {
         
         try{
             final Set<String> validFilePath = FileUtils.getFeatureFileNamesFromWorkspace(workspace, this.folderPath, listener);
@@ -160,12 +169,17 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             workspace.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePath, lastModified));
 
             // Uploads the Zip file to the Jira instance
-            uploadZipFile(client, listener, zipFile);
-            
+            UploadResult uploadResult = uploadZipFile(client, listener, zipFile);
+
+            final HostingType hostingType = instance.getHosting() == null ? HostingType.SERVER : instance.getHosting();
+            XrayEnvironmentVariableSetter
+                    .parseResponseCucumberFeatureImport(Collections.singleton(uploadResult), hostingType, listener.getLogger())
+                    .setAction(run);
+
             // Deletes the Zip File
             deleteFile(zipFile, listener);
-
-        } catch(XrayClientCoreGenericException  e){
+        } catch (XrayClientCoreGenericException e) {
+            addFailedOpEnvironmentVariables(run);
             listener.error(e.getMessage());
             throw new AbortException(e.getMessage());
         } finally {
@@ -184,17 +198,29 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         }
     }
 
-    private void uploadZipFile(XrayTestImporter client, TaskListener listener, FilePath zipFile) throws IOException, InterruptedException {
+    private UploadResult uploadZipFile(XrayTestImporter client, TaskListener listener, FilePath zipFile) throws IOException, InterruptedException {
         FileStream zipFileStream = new FileStream(
                 zipFile.getName(),
                 zipFile.read(),
                 ContentType.APPLICATION_JSON);
         UploadResult uploadResult = client.importFeatures(this.projectKey, zipFileStream);
         listener.getLogger().println(uploadResult.getMessage());
+
+        return uploadResult;
     }
 
     private FilePath createZipFile(final FilePath workspace) {
         return new FilePath(workspace, TMP_ZIP_FILENAME);
+    }
+
+    private void addFailedOpEnvironmentVariables(Run<?,?> run) {
+        addFailedOpEnvironmentVariables(run, null);
+    }
+
+    private void addFailedOpEnvironmentVariables(Run<?,?> run, String message) {
+        XrayEnvironmentVariableSetter
+                .failed(message)
+                .setAction(run);
     }
 
     @Extension

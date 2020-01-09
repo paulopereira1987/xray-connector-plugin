@@ -1,13 +1,24 @@
 package com.xpandit.plugins.xrayjenkins.services;
 
+import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.xray.model.UploadResult;
 import hudson.model.Run;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
+import java.io.PrintStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.FALSE_STRING;
+import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.TRUE_STRING;
+import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.getCreatedTestsKeys;
+import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestExecutionsKeys;
+import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.getRawResponses;
+import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.isUploadSuccessful;
 
 public class XrayEnvironmentVariableSetter {
 
@@ -17,10 +28,6 @@ public class XrayEnvironmentVariableSetter {
         XRAY_TEST_EXECS, // Test Execution Issues created/modified, separated by a semicolon.
         XRAY_TESTS  // Test Issues created/modified, separated by a semicolon.
     }
-
-
-    private static final String TRUE_STRING = Boolean.toString(true);
-    private static final String FALSE_STRING = Boolean.toString(false);
 
     private final Map<XrayEnvironmentVariable, String> newVariables;
 
@@ -32,20 +39,35 @@ public class XrayEnvironmentVariableSetter {
         }
     }
 
-    public static XrayEnvironmentVariableSetter parseResponse(final UploadResult result) {
+    public static XrayEnvironmentVariableSetter parseResponseCucumberFeatureImport(final Collection<UploadResult> results,
+                                                                                   final HostingType hostingType,
+                                                                                   final PrintStream logger) {
         //TODO
-        return successful();
+        return success();
     }
 
-    public static XrayEnvironmentVariableSetter successful() {
+    public static XrayEnvironmentVariableSetter parseResponse(final Collection<UploadResult> results,
+                                                              final HostingType hostingType,
+                                                              final PrintStream logger) {
+        if (results == null) {
+            return failed();
+        }
+
         final XrayEnvironmentVariableSetter variableSetter = new XrayEnvironmentVariableSetter();
 
-        variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_IS_REQUEST_SUCCESSFUL, TRUE_STRING);
+        variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_RAW_RESPONSE, getRawResponses(results));
+        variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_IS_REQUEST_SUCCESSFUL, isUploadSuccessful(results));
+        variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_TEST_EXECS, getModifiedTestExecutionsKeys(results, hostingType, logger));
+        variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_TESTS, getCreatedTestsKeys(results, hostingType, logger));
 
         return variableSetter;
     }
 
-    public static XrayEnvironmentVariableSetter successful(final String message) {
+    public static XrayEnvironmentVariableSetter success() {
+        return success(null);
+    }
+
+    public static XrayEnvironmentVariableSetter success(@Nullable final String message) {
         final XrayEnvironmentVariableSetter variableSetter = new XrayEnvironmentVariableSetter();
 
         variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_IS_REQUEST_SUCCESSFUL, TRUE_STRING);
@@ -57,14 +79,10 @@ public class XrayEnvironmentVariableSetter {
     }
 
     public static XrayEnvironmentVariableSetter failed() {
-        final XrayEnvironmentVariableSetter variableSetter = new XrayEnvironmentVariableSetter();
-
-        variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_IS_REQUEST_SUCCESSFUL, FALSE_STRING);
-
-        return variableSetter;
+        return failed(null);
     }
 
-    public static XrayEnvironmentVariableSetter failed(final String message) {
+    public static XrayEnvironmentVariableSetter failed(@Nullable final String message) {
         final XrayEnvironmentVariableSetter variableSetter = new XrayEnvironmentVariableSetter();
 
         variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_IS_REQUEST_SUCCESSFUL, FALSE_STRING);

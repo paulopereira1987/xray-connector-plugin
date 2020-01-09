@@ -12,6 +12,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil;
 import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
+import com.xpandit.plugins.xrayjenkins.services.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayImportBuilderCompatibilityDelegate;
 import com.xpandit.xray.model.ParameterBean;
 import com.xpandit.xray.model.QueryParameter;
@@ -21,6 +22,7 @@ import com.xpandit.xray.model.UploadResult;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -439,23 +441,31 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 		listener.getLogger().println("####   Xray is importing the feature files  ####");
         listener.getLogger().println("##########################################################");
         XrayInstance importInstance = ConfigurationUtils.getConfiguration(serverInstance);
-        if(importInstance == null){
+
+        if (importInstance == null) {
+			XrayEnvironmentVariableSetter
+					.failed("The Jira server configuration of this task was not found.")
+					.setAction(build);
         	throw new AbortException("The Jira server configuration of this task was not found.");
 		}
 
 		final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
+		final HostingType hostingType = importInstance.getHosting() == null ? HostingType.SERVER : importInstance.getHosting();
 		XrayImporter client;
 
-        if(importInstance.getHosting() == HostingType.CLOUD) {
+        if (hostingType == HostingType.CLOUD) {
 			client = new XrayImporterCloudImpl(importInstance.getCredential(build).getUsername(),
 					importInstance.getCredential(build).getPassword(),
 					proxyBean);
-		} else if (importInstance.getHosting() == null || importInstance.getHosting() == HostingType.SERVER)  {
+		} else if (hostingType == HostingType.SERVER)  {
 			client = new XrayImporterImpl(importInstance.getServerAddress(),
 					importInstance.getCredential(build).getUsername(),
 					importInstance.getCredential(build).getPassword(),
 					proxyBean);
 		} else {
+			XrayEnvironmentVariableSetter
+					.failed("Hosting type not recognized.")
+					.setAction(build);
         	throw new XrayJenkinsGenericException("Hosting type not recognized.");
 		}
 
@@ -464,12 +474,16 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 
 		Endpoint endpointValue = Endpoint.lookupBySuffix(this.endpointName);
 
+		final List<UploadResult> uploadResults = new ArrayList<>();
+
 		if(BuilderUtils.isGlobExpressionsSupported(endpointValue)){
 			UploadResult result;
 			ObjectMapper mapper = new ObjectMapper();
 			String key = null;
 			for(FilePath fp : FileUtils.getFiles(workspace, resolved, listener)){
 				result = uploadResults(workspace, listener,client, fp, env, key);
+				uploadResults.add(result);
+
 				if(key == null && "true".equals(importToSameExecution)){
 					HostingType instanceType = importInstance.getHosting();
 
@@ -491,15 +505,23 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 						throw new XrayJenkinsGenericException("Instance type not found.");
 					}
 
-					if(key == null){
+					if (key == null) {
+						XrayEnvironmentVariableSetter
+								.failed("No Test Execution Key returned")
+								.setAction(build);
 						throw new XrayJenkinsGenericException("No Test Execution Key returned");
 					}
 				}
 			}
-		} else{
+		} else {
 			FilePath file = getFile(workspace, resolved, listener);
-			uploadResults(workspace, listener, client, file, env, null);
+			uploadResults.add(uploadResults(workspace, listener, client, file, env, null));
 		}
+
+		// Sets the Xray Build Environment Variables
+		XrayEnvironmentVariableSetter
+				.parseResponse(uploadResults, hostingType, listener.getLogger())
+				.setAction(build);
 	}
 
     /**
@@ -551,14 +573,15 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 					info = new com.xpandit.xray.model.StringContent(resolved, targetEndpoint.getInfoFieldMediaType());
 				}
 
-
 				dataParams.put(com.xpandit.xray.model.DataParameter.INFO, info);
 			}
 
-			listener.getLogger().println("Starting to import results from " + resultsFile.getName() );
+			listener.getLogger().println("Starting to import results from " + resultsFile.getName());
+
 			UploadResult result = client.uploadResults(targetEndpoint, dataParams, queryParams);
-            listener.getLogger().println("response: " + result.getMessage());
-			listener.getLogger().println("Sucessfully imported " + targetEndpoint.getName() + " results from " + resultsFile.getName() );
+
+            listener.getLogger().println("Response: (" + result.getStatusCode() + ") " + result.getMessage());
+			listener.getLogger().println("Successfully imported " + targetEndpoint.getName() + " results from " + resultsFile.getName());
 			return result;
 
 		}catch(XrayClientCoreGenericException | XrayJenkinsGenericException e){

@@ -157,6 +157,10 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
 
         if(serverInstance == null){
             listener.getLogger().println("XrayInstance is null. please check the passed configuration ID");
+
+            XrayEnvironmentVariableSetter
+                    .failed("XrayInstance is null. please check the passed configuration ID")
+                    .setAction(build);
             throw new AbortException("The Jira server configuration of this task was not found.");
         }
 
@@ -173,6 +177,9 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
                     serverInstance.getCredential(build).getPassword(),
                     proxyBean);
         } else {
+            XrayEnvironmentVariableSetter
+                    .failed("Hosting type not recognized.")
+                    .setAction(build);
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
         
@@ -196,16 +203,19 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             this.unzipFeatures(listener, workspace, expandedFilePath, file);
             
             listener.getLogger().println("Successfully exported the Cucumber features");
-        } catch (XrayClientCoreGenericException e) {
-            e.printStackTrace();
-            throw new AbortException(e.getMessage());
-		} catch (IOException e) {
-            e.printStackTrace();
-            listener.error(e.getMessage());
-            throw new IOException(e);
-        } catch (InterruptedException e) {
+
+            // Sets the Xray Build Environment Variables
+            XrayEnvironmentVariableSetter
+                    .success()
+                    .setAction(build);
+        } catch (XrayClientCoreGenericException | IOException | InterruptedException e) {
             e.printStackTrace();
             listener.error(e.getMessage());
+
+            XrayEnvironmentVariableSetter
+                    .failed()
+                    .setAction(build);
+
             throw new AbortException(e.getMessage());
         } finally {
             client.shutdown();
