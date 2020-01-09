@@ -67,6 +67,8 @@ import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
+
 /**
  * This class is responsible for performing the Xray: Results Import Task
  * development guidelines for compatibility:
@@ -420,7 +422,6 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 						@Nonnull Launcher launcher,
 						@Nonnull TaskListener listener)
 			throws InterruptedException, IOException {
-
 		/**
 		 * Compatibility fix:
 		 * Forward case - the job was created on pré-1.3.0. blueprint fields need to be populated with values
@@ -459,7 +460,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 		}
 
 		EnvVars env = build.getEnvironment(listener);
-		String resolved = EnvironmentVariableUtil.expandVariable(env,this.importFilePath);
+		String resolved = expandVariable(env, this.importFilePath);
 
 		Endpoint endpointValue = Endpoint.lookupBySuffix(this.endpointName);
 
@@ -540,7 +541,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 
 			}
 			if(StringUtils.isNotBlank(this.importInfo)){
-				String resolved = EnvironmentVariableUtil.expandVariable(env,this.importInfo);
+				String resolved = expandVariable(env,this.importInfo);
 
 				Content info;
 				if(this.inputInfoSwitcher.equals("filePath")){
@@ -578,12 +579,12 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 
 	private Map<com.xpandit.xray.model.QueryParameter, String> prepareQueryParam(EnvVars env){
 		Map<com.xpandit.xray.model.QueryParameter,String> queryParams = new EnumMap<>(QueryParameter.class);
-		queryParams.put(com.xpandit.xray.model.QueryParameter.PROJECT_KEY, EnvironmentVariableUtil.expandVariable(env,projectKey));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_EXEC_KEY, EnvironmentVariableUtil.expandVariable(env,testExecKey));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_PLAN_KEY, EnvironmentVariableUtil.expandVariable(env,testPlanKey));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_ENVIRONMENTS, EnvironmentVariableUtil.expandVariable(env,testEnvironments));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.REVISION, EnvironmentVariableUtil.expandVariable(env,revision));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.FIX_VERSION, EnvironmentVariableUtil.expandVariable(env,fixVersion));
+		queryParams.put(com.xpandit.xray.model.QueryParameter.PROJECT_KEY, expandVariable(env,projectKey));
+		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_EXEC_KEY, expandVariable(env,testExecKey));
+		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_PLAN_KEY, expandVariable(env,testPlanKey));
+		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_ENVIRONMENTS, expandVariable(env,testEnvironments));
+		queryParams.put(com.xpandit.xray.model.QueryParameter.REVISION, expandVariable(env,revision));
+		queryParams.put(com.xpandit.xray.model.QueryParameter.FIX_VERSION, expandVariable(env,fixVersion));
 		return queryParams;
 	}
 
