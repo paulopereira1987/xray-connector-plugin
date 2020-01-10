@@ -27,7 +27,7 @@ public enum HostingType {
      */
     public static HostingType findByName(String name) {
         for (HostingType type : HostingType.values()) {
-            if (StringUtils.equals(type.getTypeName(), name)) {
+            if (StringUtils.equalsIgnoreCase(type.getTypeName(), name)) {
                 return type;
             }
         }

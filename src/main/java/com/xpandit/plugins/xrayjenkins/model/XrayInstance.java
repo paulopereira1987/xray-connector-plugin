@@ -35,15 +35,15 @@ public class XrayInstance {
 		this.hosting = HostingType.findByName(hosting);
 
 		if (this.hosting == null) {
-			throw new XrayJenkinsGenericException("Hosting type not recognized");
+			throw new XrayJenkinsGenericException("Hosting type not recognized: " + hosting);
 		}
 
         this.credentialId = credentialId;
     }
 
 	@DataBoundConstructor
- 	public XrayInstance(String configID, String alias , String hosting, String serverAddress, String credentialId) {
-    	this(serverAddress, hosting, credentialId);
+ 	public XrayInstance(String configID, String alias, Object hosting, String serverAddress, String credentialId) {
+    	this(serverAddress, hosting.toString(), credentialId);
 
 		this.configID = StringUtils.isBlank(configID) ? UUID.randomUUID().toString() : configID;
  		this.alias = alias;

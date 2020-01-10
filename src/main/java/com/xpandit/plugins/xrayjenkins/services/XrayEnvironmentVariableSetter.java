@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.FALSE_STRING;
 import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.TRUE_STRING;
@@ -32,7 +31,7 @@ public class XrayEnvironmentVariableSetter {
     private final Map<XrayEnvironmentVariable, String> newVariables;
 
     private XrayEnvironmentVariableSetter() {
-        newVariables = new ConcurrentHashMap<>();
+        newVariables = Collections.synchronizedMap(new HashMap<XrayEnvironmentVariable, String>());
 
         for (XrayEnvironmentVariable variable : XrayEnvironmentVariable.values()) {
             newVariables.put(variable, StringUtils.EMPTY);
