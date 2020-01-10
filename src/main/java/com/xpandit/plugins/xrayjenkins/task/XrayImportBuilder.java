@@ -445,7 +445,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         if (importInstance == null) {
 			XrayEnvironmentVariableSetter
 					.failed("The Jira server configuration of this task was not found.")
-					.setAction(build);
+					.setAction(build, listener);
         	throw new AbortException("The Jira server configuration of this task was not found.");
 		}
 
@@ -465,7 +465,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 		} else {
 			XrayEnvironmentVariableSetter
 					.failed("Hosting type not recognized.")
-					.setAction(build);
+					.setAction(build, listener);
         	throw new XrayJenkinsGenericException("Hosting type not recognized.");
 		}
 
@@ -508,7 +508,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 					if (key == null) {
 						XrayEnvironmentVariableSetter
 								.failed("No Test Execution Key returned")
-								.setAction(build);
+								.setAction(build, listener);
 						throw new XrayJenkinsGenericException("No Test Execution Key returned");
 					}
 				}
@@ -521,7 +521,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 		// Sets the Xray Build Environment Variables
 		XrayEnvironmentVariableSetter
 				.parseResponse(uploadResults, hostingType, listener.getLogger())
-				.setAction(build);
+				.setAction(build, listener);
 	}
 
     /**

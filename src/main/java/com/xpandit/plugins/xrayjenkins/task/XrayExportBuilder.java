@@ -160,7 +160,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
 
             XrayEnvironmentVariableSetter
                     .failed("XrayInstance is null. please check the passed configuration ID")
-                    .setAction(build);
+                    .setAction(build, listener);
             throw new AbortException("The Jira server configuration of this task was not found.");
         }
 
@@ -179,7 +179,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         } else {
             XrayEnvironmentVariableSetter
                     .failed("Hosting type not recognized.")
-                    .setAction(build);
+                    .setAction(build, listener);
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
         
@@ -207,14 +207,14 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             // Sets the Xray Build Environment Variables
             XrayEnvironmentVariableSetter
                     .success()
-                    .setAction(build);
+                    .setAction(build, listener);
         } catch (XrayClientCoreGenericException | IOException | InterruptedException e) {
             e.printStackTrace();
             listener.error(e.getMessage());
 
             XrayEnvironmentVariableSetter
                     .failed()
-                    .setAction(build);
+                    .setAction(build, listener);
 
             throw new AbortException(e.getMessage());
         } finally {

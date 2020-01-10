@@ -122,17 +122,17 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
         if(xrayInstance == null){
             listener.getLogger().println("The server instance is null");
-            addFailedOpEnvironmentVariables(run, "The server instance is null");
+            addFailedOpEnvironmentVariables(run, "The server instance is null", listener);
             throw new AbortException();
         }
         if (StringUtils.isBlank(this.projectKey)) {
             listener.getLogger().println("You must provide the project key");
-            addFailedOpEnvironmentVariables(run, "You must provide the project key");
+            addFailedOpEnvironmentVariables(run, "You must provide the project key", listener);
             throw new AbortException();
         }
         if(StringUtils.isBlank(this.folderPath)){
             listener.getLogger().println("You must provide the directory path");
-            addFailedOpEnvironmentVariables(run, "You must provide the directory path");
+            addFailedOpEnvironmentVariables(run, "You must provide the directory path", listener);
             throw new AbortException();
         }
         
@@ -146,7 +146,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
                     xrayInstance.getCredential(run).getPassword(),
                     proxyBean);
         } else {
-            addFailedOpEnvironmentVariables(run, "Hosting type not recognized.");
+            addFailedOpEnvironmentVariables(run, "Hosting type not recognized.", listener);
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
 
@@ -174,12 +174,12 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             final HostingType hostingType = instance.getHosting() == null ? HostingType.SERVER : instance.getHosting();
             XrayEnvironmentVariableSetter
                     .parseResponseCucumberFeatureImport(Collections.singleton(uploadResult), hostingType, listener.getLogger())
-                    .setAction(run);
+                    .setAction(run, listener);
 
             // Deletes the Zip File
             deleteFile(zipFile, listener);
         } catch (XrayClientCoreGenericException e) {
-            addFailedOpEnvironmentVariables(run);
+            addFailedOpEnvironmentVariables(run, listener);
             listener.error(e.getMessage());
             throw new AbortException(e.getMessage());
         } finally {
@@ -213,14 +213,14 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         return new FilePath(workspace, TMP_ZIP_FILENAME);
     }
 
-    private void addFailedOpEnvironmentVariables(Run<?,?> run) {
-        addFailedOpEnvironmentVariables(run, null);
+    private void addFailedOpEnvironmentVariables(Run<?,?> run, TaskListener taskListener) {
+        addFailedOpEnvironmentVariables(run, null, taskListener);
     }
 
-    private void addFailedOpEnvironmentVariables(Run<?,?> run, String message) {
+    private void addFailedOpEnvironmentVariables(Run<?,?> run, String message, TaskListener taskListener) {
         XrayEnvironmentVariableSetter
                 .failed(message)
-                .setAction(run);
+                .setAction(run, taskListener);
     }
 
     @Extension

@@ -3,6 +3,7 @@ package com.xpandit.plugins.xrayjenkins.services;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.xray.model.UploadResult;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -94,12 +95,23 @@ public class XrayEnvironmentVariableSetter {
         return variableSetter;
     }
 
-    public void setAction(Run<?,?> build) {
+    public void setAction(Run<?,?> build, TaskListener taskListener) {
+        setAction(build, taskListener.getLogger());
+    }
+
+    public void setAction(Run<?,?> build, @Nullable PrintStream logger) {
         if (build != null) {
             // Builds the same name, but with the name of each XrayEnvironmentVariable.
             final Map<String, String> newVariablesByName = new HashMap<>();
             for (Map.Entry<XrayEnvironmentVariable, String> entry : newVariables.entrySet()) {
-                newVariablesByName.put(entry.getKey().name(), entry.getValue());
+                final String variableName = entry.getKey().name();
+                final String variableValue = entry.getValue();
+
+                newVariablesByName.put(variableName, variableValue);
+
+                if (logger != null) {
+                    logger.println(variableName + ": " + variableValue);
+                }
             }
 
             // Adds action to Build

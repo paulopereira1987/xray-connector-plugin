@@ -47,7 +47,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
     public static String getTestExecutionKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
         JSONObject root;
         try {
-            root = new JSONObject(result);
+            root = new JSONObject(result.getMessage());
         } catch (Exception e) {
             return StringUtils.EMPTY;
         }
@@ -94,7 +94,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
     public static String getTestKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
         JSONObject root;
         try {
-            root = new JSONObject(result);
+            root = new JSONObject(result.getMessage());
         } catch (Exception e) {
             return StringUtils.EMPTY;
         }
@@ -123,7 +123,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
             JSONObject testIssuesResult = root.getJSONObject("testIssues");
             if (testIssuesResult.has("success")) {
                 JSONArray createdTestIssues = testIssuesResult.getJSONArray("success");
-                for (int i = 0; i < testIssuesResult.length(); i++) {
+                for (int i = 0; i < createdTestIssues.length(); i++) {
                     JSONObject testIssue = createdTestIssues.getJSONObject(i);
                     if (testIssue.has("key")) {
                         testKeys.add(testIssue.getString("key"));
