@@ -24,7 +24,7 @@ public class XrayEnvironmentInjectAction implements EnvironmentContributingActio
         Objects.requireNonNull(variablesToAdd, "'variablesToAdd' can't be null!");
         Objects.requireNonNull(variablesToRemove, "'variablesToRemove' can't be null!");
 
-        // We can't use Java native Synchronized structured since they are blocked by Jenkins in a Pipeline projecct
+        // We can't use Java native Synchronized structures since they are blocked by Jenkins in a Pipeline project
         // See: https://jenkins.io/blog/2018/01/13/jep-200/
         this.newVariablesToAdd = Collections.synchronizedMap(new HashMap<>(variablesToAdd));
         this.variablesToRemove = Collections.synchronizedSet(new HashSet<>(variablesToRemove));
