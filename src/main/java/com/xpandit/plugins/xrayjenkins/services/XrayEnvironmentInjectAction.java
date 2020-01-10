@@ -6,14 +6,16 @@ import hudson.model.EnvironmentContributingAction;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
-public class XrayEnvironmentInjectAction implements EnvironmentContributingAction {
+public class XrayEnvironmentInjectAction implements EnvironmentContributingAction, Serializable {
 
     private final Map<String, String> newVariablesToAdd;
     private final Set<String> variablesToRemove;
@@ -22,8 +24,10 @@ public class XrayEnvironmentInjectAction implements EnvironmentContributingActio
         Objects.requireNonNull(variablesToAdd, "'variablesToAdd' can't be null!");
         Objects.requireNonNull(variablesToRemove, "'variablesToRemove' can't be null!");
 
-        this.newVariablesToAdd = new ConcurrentHashMap<>(variablesToAdd);
-        this.variablesToRemove = new ConcurrentSkipListSet<>(variablesToRemove);
+        // We can't use Java native Synchronized structured since they are blocked by Jenkins in a Pipeline projecct
+        // See: https://jenkins.io/blog/2018/01/13/jep-200/
+        this.newVariablesToAdd = Collections.synchronizedMap(new HashMap<>(variablesToAdd));
+        this.variablesToRemove = Collections.synchronizedSet(new HashSet<>(variablesToRemove));
     }
 
     @Override
