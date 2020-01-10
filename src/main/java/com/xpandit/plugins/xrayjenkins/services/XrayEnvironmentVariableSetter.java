@@ -31,6 +31,8 @@ public class XrayEnvironmentVariableSetter {
     private final Map<XrayEnvironmentVariable, String> newVariables;
 
     private XrayEnvironmentVariableSetter() {
+        // We can't use Java native Synchronized structures since they are blocked by Jenkins in a Pipeline project
+        // See: https://jenkins.io/blog/2018/01/13/jep-200/
         newVariables = Collections.synchronizedMap(new HashMap<XrayEnvironmentVariable, String>());
 
         for (XrayEnvironmentVariable variable : XrayEnvironmentVariable.values()) {

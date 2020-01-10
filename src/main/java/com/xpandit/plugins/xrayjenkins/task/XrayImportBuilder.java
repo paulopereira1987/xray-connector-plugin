@@ -89,7 +89,7 @@ import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expa
  *
  * @see com.xpandit.plugins.xrayjenkins.task.compatibility.XrayImportBuilderCompatibilityDelegate
  */
-public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
+public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
 	private static final Logger LOG = LoggerFactory.getLogger(XrayImportBuilder.class);
 	private static Gson gson = new GsonBuilder().create();
