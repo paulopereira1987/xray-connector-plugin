@@ -8,14 +8,12 @@
 package com.xpandit.plugins.xrayjenkins.task;
 
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
-import com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
-import com.xpandit.plugins.xrayjenkins.services.XrayEnvironmentInjectAction;
-import com.xpandit.plugins.xrayjenkins.services.XrayEnvironmentVariableSetter;
+import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayExportBuilderCompatibilityDelegate;
 import com.xpandit.xray.service.impl.XrayExporterCloudImpl;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;

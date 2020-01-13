@@ -1,4 +1,4 @@
-package com.xpandit.plugins.xrayjenkins.Utils;
+package com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util;
 
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.xray.model.UploadResult;
@@ -17,6 +17,8 @@ import java.util.Set;
 
 public class XrayEnvironmentVariableSetterHelperUtil {
 
+    private static final char SEPARATOR = ';';
+
     public static final String TRUE_STRING = Boolean.toString(true);
     public static final String FALSE_STRING = Boolean.toString(false);
 
@@ -28,7 +30,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
             resultsString.add(result.getMessage());
         }
 
-        return StringUtils.join(resultsString, ';');
+        return StringUtils.join(resultsString, SEPARATOR);
     }
 
     public static String getModifiedTestExecutionsKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
@@ -41,7 +43,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
             }
         }
 
-        return StringUtils.join(testExecutionKeys, ';');
+        return StringUtils.join(testExecutionKeys, SEPARATOR);
     }
 
     public static String getTestExecutionKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
@@ -88,7 +90,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
             }
         }
 
-        return StringUtils.join(testKeys, ';');
+        return StringUtils.join(testKeys, SEPARATOR);
     }
 
     public static String getTestKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
@@ -107,7 +109,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
                 Set<String> testKeys = extractTestKeysFromJson(root);
 
                 // Test Exec Key not found in the place we were expecting it.
-                return StringUtils.join(testKeys, ';');
+                return StringUtils.join(testKeys, SEPARATOR);
             default:
                 if (logger != null) {
                     logger.println("[getTestKey] Hosting Type not implemented!");

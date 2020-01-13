@@ -1,4 +1,4 @@
-package com.xpandit.plugins.xrayjenkins.services;
+package com.xpandit.plugins.xrayjenkins.services.enviromentvariables;
 
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.xray.model.UploadResult;
@@ -13,12 +13,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.FALSE_STRING;
-import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.TRUE_STRING;
-import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.getCreatedTestsKeys;
-import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestExecutionsKeys;
-import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.getRawResponses;
-import static com.xpandit.plugins.xrayjenkins.Utils.XrayEnvironmentVariableSetterHelperUtil.isUploadSuccessful;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.FALSE_STRING;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.TRUE_STRING;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getCreatedTestsKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestExecutionsKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getRawResponses;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.isUploadSuccessful;
 
 public class XrayEnvironmentVariableSetter {
 

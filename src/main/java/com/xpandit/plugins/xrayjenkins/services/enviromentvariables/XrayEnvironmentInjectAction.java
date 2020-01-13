@@ -1,4 +1,4 @@
-package com.xpandit.plugins.xrayjenkins.services;
+package com.xpandit.plugins.xrayjenkins.services.enviromentvariables;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
