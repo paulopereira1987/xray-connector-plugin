@@ -1,5 +1,6 @@
 package com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util;
 
+import com.google.common.collect.Sets;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.xray.model.UploadResult;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +18,7 @@ import java.util.Set;
 
 public class XrayEnvironmentVariableSetterHelperUtil {
 
-    private static final char SEPARATOR = ';';
+    public static final char SEPARATOR = ';';
 
     public static final String TRUE_STRING = Boolean.toString(true);
     public static final String FALSE_STRING = Boolean.toString(false);
@@ -80,7 +81,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         }
     }
 
-    public static String getCreatedTestsKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
+    public static String getCreatedTestKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
         final Set<String> testKeys = new HashSet<>(results.size());
         for (UploadResult result : results) {
             final String testKey = getTestKey(result, hostingType, logger);
@@ -147,5 +148,83 @@ public class XrayEnvironmentVariableSetterHelperUtil {
             }
         }
         return TRUE_STRING;
+    }
+
+    public static String getImportedFeatureIssueKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
+        final Set<String> allTestKeys = new HashSet<>(results.size());
+        for (UploadResult result : results) {
+            final String testKeys = getSingleResultImportedIssueKeys(result, hostingType, logger);
+
+            if (StringUtils.isNotBlank(testKeys)) {
+                allTestKeys.add(testKeys);
+            }
+        }
+
+        return StringUtils.join(allTestKeys, SEPARATOR);
+    }
+
+    private static String getSingleResultImportedIssueKeys(UploadResult result, HostingType hostingType, PrintStream logger) {
+        switch (hostingType) {
+            case CLOUD:
+                JSONObject cloudRoot;
+                try {
+                    cloudRoot = new JSONObject(result.getMessage());
+                } catch (Exception e) {
+                    return StringUtils.EMPTY;
+                }
+
+                return StringUtils.join(getCloudSingleResultImportedIssueKeys(cloudRoot), SEPARATOR);
+            case SERVER:
+                JSONArray serverRoot;
+                try {
+                    serverRoot = new JSONArray(result.getMessage());
+                } catch (Exception e) {
+                    return StringUtils.EMPTY;
+                }
+
+                return StringUtils.join(getServerSingleResultImportedIssueKeys(serverRoot), SEPARATOR);
+            default:
+                if (logger != null) {
+                    logger.println("[getSingleResultImportedTestKeys] Hosting Type not implemented!");
+                }
+                return StringUtils.EMPTY;
+        }
+    }
+
+    private static Set<String> getServerSingleResultImportedIssueKeys(JSONArray root) {
+        final Set<String> updatedOrCreatedIssueKeys = Sets.newHashSet();
+        for (int i = 0; i < root.length(); i++) {
+            final JSONObject test = root.getJSONObject(i);
+            if (test.has("key")) {
+                updatedOrCreatedIssueKeys.add(test.getString("key"));
+            }
+        }
+
+        return updatedOrCreatedIssueKeys;
+    }
+
+    private static Set<String> getCloudSingleResultImportedIssueKeys(JSONObject root) {
+        final Set<String> updatedOrCreatedIssueKeys = Sets.newHashSet();
+        if (root.has("updatedOrCreatedTests")) {
+            final JSONArray tests = root.getJSONArray("updatedOrCreatedTests");
+            for (int i = 0; i < tests.length(); i++) {
+                final JSONObject test = tests.getJSONObject(i);
+                if (test.has("key")) {
+                    updatedOrCreatedIssueKeys.add(test.getString("key"));
+                }
+            }
+        }
+
+        if (root.has("updatedOrCreatedPreconditions")) {
+            final JSONArray tests = root.getJSONArray("updatedOrCreatedPreconditions");
+            for (int i = 0; i < tests.length(); i++) {
+                final JSONObject test = tests.getJSONObject(i);
+                if (test.has("key")) {
+                    updatedOrCreatedIssueKeys.add(test.getString("key"));
+                }
+            }
+        }
+        
+        return updatedOrCreatedIssueKeys;
     }
 }

@@ -170,7 +170,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
             final HostingType hostingType = instance.getHosting() == null ? HostingType.SERVER : instance.getHosting();
             XrayEnvironmentVariableSetter
-                    .parseResponseCucumberFeatureImport(Collections.singleton(uploadResult), hostingType, listener.getLogger())
+                    .parseCucumberFeatureImportResponse(Collections.singleton(uploadResult), hostingType, listener.getLogger())
                     .setAction(run, listener);
 
             // Deletes the Zip File

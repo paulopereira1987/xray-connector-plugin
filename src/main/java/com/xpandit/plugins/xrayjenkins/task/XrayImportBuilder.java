@@ -519,7 +519,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
 		// Sets the Xray Build Environment Variables
 		XrayEnvironmentVariableSetter
-				.parseResponse(uploadResults, hostingType, listener.getLogger())
+				.parseResultImportResponse(uploadResults, hostingType, listener.getLogger())
 				.setAction(build, listener);
 	}
 
