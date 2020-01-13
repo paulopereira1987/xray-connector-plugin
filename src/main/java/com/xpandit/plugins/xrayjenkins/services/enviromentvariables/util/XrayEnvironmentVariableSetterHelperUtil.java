@@ -25,6 +25,12 @@ public class XrayEnvironmentVariableSetterHelperUtil {
 
     private XrayEnvironmentVariableSetterHelperUtil() {}
 
+    /**
+     * Gets all the raw responses of the requests, joined by the SEPARATOR.
+     *
+     * @param results all the request results.
+     * @return string representing the raw JSON response of the requests.
+     */
     public static String getRawResponses(@Nonnull Collection<UploadResult> results) {
         final List<String> resultsString = new ArrayList<>(results.size());
         for (UploadResult result : results) {
@@ -34,6 +40,12 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         return StringUtils.join(resultsString, SEPARATOR);
     }
 
+    /**
+     * Gets all the modified Test Execution keys, joined by the SEPARATOR.
+     *
+     * @param results all the request results.
+     * @return string representing the Test Execution keys created/modified in the requests.
+     */
     public static String getModifiedTestExecutionsKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
         final Set<String> testExecutionKeys = new HashSet<>(results.size());
         for (UploadResult result : results) {
@@ -47,7 +59,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         return StringUtils.join(testExecutionKeys, SEPARATOR);
     }
 
-    public static String getTestExecutionKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
+    private static String getTestExecutionKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
         JSONObject root;
         try {
             root = new JSONObject(result.getMessage());
@@ -81,7 +93,15 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         }
     }
 
-    public static String getCreatedTestKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
+    /**
+     * Gets all the modified Test keys in a single request, joined by the SEPARATOR.
+     *
+     * @param results result of the upload requests.
+     * @param hostingType the hosting type of the Jira instance.
+     * @param logger the logger that will be used to log some messages.
+     * @return string representing the Test Execution keys created/modified in the requests.
+     */
+    public static String getModifiedTestKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
         final Set<String> testKeys = new HashSet<>(results.size());
         for (UploadResult result : results) {
             final String testKey = getTestKey(result, hostingType, logger);
@@ -94,7 +114,7 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         return StringUtils.join(testKeys, SEPARATOR);
     }
 
-    public static String getTestKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
+    private static String getTestKey(UploadResult result, HostingType hostingType, @Nullable PrintStream logger) {
         JSONObject root;
         try {
             root = new JSONObject(result.getMessage());
@@ -138,6 +158,12 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         return testKeys;
     }
 
+    /**
+     * Checks if all the requests were successful.
+     *
+     * @param results result of the upload requests.
+     * @return "true" if all requests were successful, "false" otherwise.
+     */
     public static String isUploadSuccessful(Collection<UploadResult> results) {
         for (UploadResult result : results) {
             int statusCode = result.getStatusCode();
@@ -150,6 +176,14 @@ public class XrayEnvironmentVariableSetterHelperUtil {
         return TRUE_STRING;
     }
 
+    /**
+     * Gets all the modified/created issues (Tests and Pre-conditions) from Cucumber feature file import requests.
+     *
+     * @param results the Cucumber feature file import requests.
+     * @param hostingType the hosting type of the Jira instance.
+     * @param logger the logger that will be used to log some messages.
+     * @return string with all the issue keys that were created and/or modified in the requests.
+     */
     public static String getImportedFeatureIssueKeys(Collection<UploadResult> results, HostingType hostingType, @Nullable PrintStream logger) {
         final Set<String> allTestKeys = new HashSet<>(results.size());
         for (UploadResult result : results) {

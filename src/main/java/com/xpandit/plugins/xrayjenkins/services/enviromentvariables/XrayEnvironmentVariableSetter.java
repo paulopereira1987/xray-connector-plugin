@@ -18,7 +18,7 @@ import java.util.Map;
 
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.FALSE_STRING;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.TRUE_STRING;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getCreatedTestKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestKeys;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getImportedFeatureIssueKeys;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestExecutionsKeys;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getRawResponses;
@@ -46,6 +46,14 @@ public class XrayEnvironmentVariableSetter {
         }
     }
 
+    /**
+     * Parses all the Upload Results of a Cucumber Import (features) request.
+     *
+     * @param results the request results
+     * @param hostingType the hosting type of the Jira instance
+     * @param logger the logger that will be used to log some messages
+     * @return the XrayEnvironmentVariableSetter will all the relevant information
+     */
     public static XrayEnvironmentVariableSetter parseCucumberFeatureImportResponse(final Collection<UploadResult> results,
                                                                                    final HostingType hostingType,
                                                                                    final PrintStream logger) {
@@ -58,6 +66,14 @@ public class XrayEnvironmentVariableSetter {
         return variableSetter;
     }
 
+    /**
+     * Parses all the Upload Results of a Test result importation.
+     *
+     * @param results the request results
+     * @param hostingType the hosting type of the Jira instance
+     * @param logger the logger that will be used to log some messages
+     * @return the XrayEnvironmentVariableSetter will all the relevant information
+     */
     public static XrayEnvironmentVariableSetter parseResultImportResponse(final Collection<UploadResult> results,
                                                                           final HostingType hostingType,
                                                                           final PrintStream logger) {
@@ -71,7 +87,7 @@ public class XrayEnvironmentVariableSetter {
         variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_IS_REQUEST_SUCCESSFUL, isUploadSuccessful(results));
 
         final String testExecKeys = getModifiedTestExecutionsKeys(results, hostingType, logger);
-        final String testKeys = getCreatedTestKeys(results, hostingType, logger);
+        final String testKeys = getModifiedTestKeys(results, hostingType, logger);
         variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_TEST_EXECS, testExecKeys);
         variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_TESTS, testKeys);
         variableSetter.newVariables.put(XrayEnvironmentVariable.XRAY_ISSUES_MODIFIED, getAllKeys(testExecKeys, testKeys));
@@ -79,10 +95,20 @@ public class XrayEnvironmentVariableSetter {
         return variableSetter;
     }
 
+    /**
+     * Quick method that will return a Success XrayEnvironmentVariableSetter with no raw response.
+     *
+     * @return Success XrayEnvironmentVariableSetter with no raw response.
+     */
     public static XrayEnvironmentVariableSetter success() {
         return success(null);
     }
 
+    /**
+     * Quick method that will return a Success XrayEnvironmentVariableSetter with a raw response.
+     *
+     * @return Success XrayEnvironmentVariableSetter with a raw response.
+     */
     public static XrayEnvironmentVariableSetter success(@Nullable final String message) {
         final XrayEnvironmentVariableSetter variableSetter = new XrayEnvironmentVariableSetter();
 
@@ -94,10 +120,20 @@ public class XrayEnvironmentVariableSetter {
         return variableSetter;
     }
 
+    /**
+     * Quick method that will return a Failed XrayEnvironmentVariableSetter with no raw response.
+     *
+     * @return Failed XrayEnvironmentVariableSetter with no raw response.
+     */
     public static XrayEnvironmentVariableSetter failed() {
         return failed(null);
     }
 
+    /**
+     * Quick method that will return a Failed XrayEnvironmentVariableSetter with a raw response.
+     *
+     * @return Failed XrayEnvironmentVariableSetter with a raw response.
+     */
     public static XrayEnvironmentVariableSetter failed(@Nullable final String message) {
         final XrayEnvironmentVariableSetter variableSetter = new XrayEnvironmentVariableSetter();
 
