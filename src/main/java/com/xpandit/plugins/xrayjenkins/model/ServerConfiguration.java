@@ -64,11 +64,11 @@ public class ServerConfiguration extends GlobalConfiguration {
 	}
 
 	public String getCloudHostingTypeName(){
-	    return HostingType.getCloudHostingTypeName();
+	    return HostingType.getCloudHostingName();
     }
 
     public String getServerHostingTypeName(){
-        return HostingType.getServerHostingTypeName();
+        return HostingType.getServerHostingName();
     }
 	
 	public static ServerConfiguration get() {
@@ -132,9 +132,9 @@ public class ServerConfiguration extends GlobalConfiguration {
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         boolean isConnectionOk;
 
-        if (hosting.equals(HostingType.CLOUD.getTypeName())) {
+        if (hosting.equals(HostingType.CLOUD.toString())) {
             isConnectionOk = (new XrayCloudClientImpl(username, password, proxyBean)).testConnection();
-        } else if (hosting.equals(HostingType.SERVER.getTypeName())) {
+        } else if (hosting.equals(HostingType.SERVER.toString())) {
             if(StringUtils.isBlank(serverAddress)) {
                 return FormValidation.error("Server address can't be empty");
             }

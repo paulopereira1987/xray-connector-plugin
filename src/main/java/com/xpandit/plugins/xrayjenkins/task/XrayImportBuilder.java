@@ -768,11 +768,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 		}
 
 		public String getCloudHostingTypeName(){
-        	return HostingType.getCloudHostingTypeName();
+        	return HostingType.getCloudHostingName();
 		}
 
 		public String getServerHostingTypeName(){
-			return HostingType.getServerHostingTypeName();
+			return HostingType.getServerHostingName();
 		}
 
 		public JSONObject getExclusiveCloudEndpoints() {
