@@ -15,6 +15,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * This class implements a Jenkins interface: EnvironmentContributingAction, ans as the name suggests, this class it's
+ * will be called by Jenkins itself to change/set new environment variables into the current build.
+ * Beware that this class will NOT be called in a Pipeline project, due to Jenkins limitations.
+ */
 public class XrayEnvironmentInjectAction implements EnvironmentContributingAction, Serializable {
 
     private final Map<String, String> newVariablesToAdd;

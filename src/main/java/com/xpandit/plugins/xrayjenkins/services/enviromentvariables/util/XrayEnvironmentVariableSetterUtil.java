@@ -16,14 +16,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class XrayEnvironmentVariableSetterHelperUtil {
+/**
+ * This helper class will parse the request results JSON into a string that could be used in the Jenkins environment variables.
+ */
+public class XrayEnvironmentVariableSetterUtil {
 
     public static final char SEPARATOR = ';';
 
     public static final String TRUE_STRING = Boolean.toString(true);
     public static final String FALSE_STRING = Boolean.toString(false);
 
-    private XrayEnvironmentVariableSetterHelperUtil() {}
+    private XrayEnvironmentVariableSetterUtil() {}
 
     /**
      * Gets all the raw responses of the requests, joined by the SEPARATOR.

@@ -1,7 +1,7 @@
 package com.xpandit.plugins.xrayjenkins.services.enviromentvariables;
 
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
-import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil;
+import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil;
 import com.xpandit.xray.model.UploadResult;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -16,14 +16,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.FALSE_STRING;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.TRUE_STRING;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestKeys;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getImportedFeatureIssueKeys;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getModifiedTestExecutionsKeys;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.getRawResponses;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterHelperUtil.isUploadSuccessful;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.FALSE_STRING;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.TRUE_STRING;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getModifiedTestKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getImportedFeatureIssueKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getModifiedTestExecutionsKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getRawResponses;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.isUploadSuccessful;
 
+/**
+ * This class will contain and set the new values for the Xray Jenkins environment variables.
+ */
 public class XrayEnvironmentVariableSetter {
 
     private enum XrayEnvironmentVariable {
@@ -149,25 +152,32 @@ public class XrayEnvironmentVariableSetter {
         setAction(build, taskListener.getLogger());
     }
 
-    public void setAction(Run<?,?> build, @Nullable PrintStream logger) {
+    private void setAction(Run<?,?> build, @Nullable PrintStream logger) {
         if (build != null) {
             // Builds the same name, but with the name of each XrayEnvironmentVariable.
-            final Map<String, String> newVariablesByName = new HashMap<>();
-            for (Map.Entry<XrayEnvironmentVariable, String> entry : newVariables.entrySet()) {
-                final String variableName = entry.getKey().name();
-                final String variableValue = entry.getValue();
-
-                newVariablesByName.put(variableName, variableValue);
-
-                if (logger != null) {
-                    logger.println(variableName + ": " + variableValue);
-                }
-            }
+            // Key - variable name; Value - Variable value
+            final Map<String, String> newVariablesByName = getVariableValuesByName(logger);
 
             // Adds action to Build
             final XrayEnvironmentInjectAction action = new XrayEnvironmentInjectAction(newVariablesByName, Collections.<String>emptyList());
             build.addOrReplaceAction(action);
         }
+    }
+
+    private Map<String, String> getVariableValuesByName(@Nullable PrintStream logger) {
+        final Map<String, String> newVariablesByName = new HashMap<>();
+        for (Map.Entry<XrayEnvironmentVariable, String> entry : newVariables.entrySet()) {
+            final String variableName = entry.getKey().name();
+            final String variableValue = entry.getValue();
+
+            newVariablesByName.put(variableName, variableValue);
+
+            if (logger != null) {
+                logger.println(variableName + ": " + variableValue);
+            }
+        }
+
+        return newVariablesByName;
     }
 
     private static String getAllKeys(String... allKeys) {
@@ -178,6 +188,6 @@ public class XrayEnvironmentVariableSetter {
             }
         }
 
-        return StringUtils.join(keyList, XrayEnvironmentVariableSetterHelperUtil.SEPARATOR);
+        return StringUtils.join(keyList, XrayEnvironmentVariableSetterUtil.SEPARATOR);
     }
 }

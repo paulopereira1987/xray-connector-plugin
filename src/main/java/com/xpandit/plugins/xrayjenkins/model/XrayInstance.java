@@ -7,13 +7,13 @@
  */
 package com.xpandit.plugins.xrayjenkins.model;
 
-import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import hudson.model.Run;
-import java.util.UUID;
-import javax.annotation.Nonnull;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.Nonnull;
+import java.util.UUID;
 
 /**
  * Represents a Jira/Xray instance.
