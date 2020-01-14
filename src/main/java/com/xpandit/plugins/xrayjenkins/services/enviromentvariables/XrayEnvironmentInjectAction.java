@@ -7,16 +7,13 @@ import hudson.model.EnvironmentContributingAction;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
- * This class implements a Jenkins interface: EnvironmentContributingAction, ans as the name suggests, this class it's
+ * This class implements a Jenkins interface: EnvironmentContributingAction, ans as the name suggests, this class
  * will be called by Jenkins itself to change/set new environment variables into the current build.
  * Beware that this class will NOT be called in a Pipeline project, due to Jenkins limitations.
  */
