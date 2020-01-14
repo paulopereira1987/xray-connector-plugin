@@ -49,10 +49,10 @@ public class XrayEnvironmentVariableSetter {
     /**
      * Parses all the Upload Results of a Cucumber Import (features) request.
      *
-     * @param results the request results
-     * @param hostingType the hosting type of the Jira instance
-     * @param logger the logger that will be used to log some messages
-     * @return the XrayEnvironmentVariableSetter will all the relevant information
+     * @param results the request results.
+     * @param hostingType the hosting type of the Jira instance.
+     * @param logger the logger that will be used to log some messages.
+     * @return the XrayEnvironmentVariableSetter will all the relevant information.
      */
     public static XrayEnvironmentVariableSetter parseCucumberFeatureImportResponse(final Collection<UploadResult> results,
                                                                                    final HostingType hostingType,
@@ -69,10 +69,10 @@ public class XrayEnvironmentVariableSetter {
     /**
      * Parses all the Upload Results of a Test result importation.
      *
-     * @param results the request results
-     * @param hostingType the hosting type of the Jira instance
-     * @param logger the logger that will be used to log some messages
-     * @return the XrayEnvironmentVariableSetter will all the relevant information
+     * @param results the request results.
+     * @param hostingType the hosting type of the Jira instance.
+     * @param logger the logger that will be used to log some messages.
+     * @return the XrayEnvironmentVariableSetter will all the relevant information.
      */
     public static XrayEnvironmentVariableSetter parseResultImportResponse(final Collection<UploadResult> results,
                                                                           final HostingType hostingType,
