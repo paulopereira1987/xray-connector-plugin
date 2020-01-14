@@ -159,7 +159,7 @@ public class XrayEnvironmentVariableSetter {
             final Map<String, String> newVariablesByName = getVariableValuesByName(logger);
 
             // Adds action to Build
-            final XrayEnvironmentInjectAction action = new XrayEnvironmentInjectAction(newVariablesByName, Collections.<String>emptyList());
+            final XrayEnvironmentInjectAction action = new XrayEnvironmentInjectAction(newVariablesByName);
             build.addOrReplaceAction(action);
         }
     }
