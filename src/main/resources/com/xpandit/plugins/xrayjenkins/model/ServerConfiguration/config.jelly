@@ -18,8 +18,8 @@
 
 					<f:entry title="Hosting" field="hosting">
 						<select name="hosting">
-							<option value="${descriptor.serverHostingTypeName}" selected="${serverInstances.hosting.getTypeName().equals(descriptor.serverHostingTypeName) ? 'true' : null}">Server/Data Center</option>
-							<option value="${descriptor.cloudHostingTypeName}" selected="${serverInstances.hosting.getTypeName().equals(descriptor.cloudHostingTypeName) ? 'true' : null}">Cloud</option>
+							<option value="${descriptor.serverHostingTypeName}" selected="${serverInstances.hosting.toString().equals(descriptor.serverHostingTypeName) ? 'true' : null}">Server/Data Center</option>
+							<option value="${descriptor.cloudHostingTypeName}" selected="${serverInstances.hosting.toString().equals(descriptor.cloudHostingTypeName) ? 'true' : null}">Cloud</option>
 						</select>
 					</f:entry>
 
@@ -105,7 +105,8 @@
 			    Q(addInstanceButton).click(function () {
 			        // When adding this event, it will stay on top of the click events stack for this button.
 					// Once clicked, this event will trigger first and the new server instance will not be there.
-					// So there is a need to use a mutation observer in order to wait that a new server instance it's created and added to the Dom.
+					// So there is a need to use a mutation observer in order to wait that a new server instance is
+					// created and added to the Dom.
 			        observeNewInstance.observe(document.querySelector('div[name="serverInstances"]').parentNode, {
 			            childList: true,
 						subtree: true

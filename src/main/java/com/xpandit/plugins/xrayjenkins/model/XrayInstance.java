@@ -7,13 +7,13 @@
  */
 package com.xpandit.plugins.xrayjenkins.model;
 
-import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import hudson.model.Run;
-import java.util.UUID;
-import javax.annotation.Nonnull;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.Nonnull;
+import java.util.UUID;
 
 /**
  * Represents a Jira/Xray instance.
@@ -27,27 +27,13 @@ public class XrayInstance {
     private String credentialId;
     private CredentialResolver credentialResolver;
 
-    public XrayInstance(String serverAddress, String hosting, String credentialId) {
-    	this.configID =  "";
-    	this.alias = serverAddress;
-        this.serverAddress = serverAddress;
-
-		this.hosting = HostingType.findByName(hosting);
-
-		if (this.hosting == null) {
-			throw new XrayJenkinsGenericException("Hosting type not recognized");
-		}
-
-        this.credentialId = credentialId;
-    }
-
 	@DataBoundConstructor
- 	public XrayInstance(String configID, String alias , String hosting, String serverAddress, String credentialId) {
-    	this(serverAddress, hosting, credentialId);
-
+ 	public XrayInstance(String configID, String alias, HostingType hosting, String serverAddress, String credentialId) {
 		this.configID = StringUtils.isBlank(configID) ? UUID.randomUUID().toString() : configID;
- 		this.alias = alias;
- 		
+		this.alias = alias;
+		this.hosting = hosting;
+		this.serverAddress = serverAddress;
+		this.credentialId = credentialId;
  	}
 
     public String getConfigID(){

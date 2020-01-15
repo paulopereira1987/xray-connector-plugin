@@ -13,6 +13,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
+import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayExportBuilderCompatibilityDelegate;
 import com.xpandit.xray.service.impl.XrayExporterCloudImpl;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
+import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
 
 /**
  * This class is responsible for performing the Xray: Cucumber Features Export Task
@@ -153,6 +155,10 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
 
         if(serverInstance == null){
             listener.getLogger().println("XrayInstance is null. please check the passed configuration ID");
+
+            XrayEnvironmentVariableSetter
+                    .failed("XrayInstance is null. please check the passed configuration ID")
+                    .setAction(build, listener);
             throw new AbortException("The Jira server configuration of this task was not found.");
         }
 
@@ -169,15 +175,18 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
                     serverInstance.getCredential(build).getPassword(),
                     proxyBean);
         } else {
+            XrayEnvironmentVariableSetter
+                    .failed("Hosting type not recognized.")
+                    .setAction(build, listener);
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
         
         try {
             final EnvVars env = build.getEnvironment(listener);
-            final String expandedIssues = TaskUtils.expandVariable(env, issues);
-            final String expandedFilter = TaskUtils.expandVariable(env, filter);
-            final String expandedFilePath = TaskUtils.expandVariable(env, filePath);
-            
+            final String expandedIssues = expandVariable(env, issues);
+            final String expandedFilter = expandVariable(env, filter);
+            final String expandedFilePath = expandVariable(env, filePath);
+
             if (StringUtils.isNotBlank(expandedIssues)) {
                 listener.getLogger().println("Issues: " + expandedIssues);
             }
@@ -192,16 +201,19 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             this.unzipFeatures(listener, workspace, expandedFilePath, file);
             
             listener.getLogger().println("Successfully exported the Cucumber features");
-        } catch (XrayClientCoreGenericException e) {
-            e.printStackTrace();
-            throw new AbortException(e.getMessage());
-		} catch (IOException e) {
-            e.printStackTrace();
-            listener.error(e.getMessage());
-            throw new IOException(e);
-        } catch (InterruptedException e) {
+
+            // Sets the Xray Build Environment Variables
+            XrayEnvironmentVariableSetter
+                    .success()
+                    .setAction(build, listener);
+        } catch (XrayClientCoreGenericException | IOException | InterruptedException e) {
             e.printStackTrace();
             listener.error(e.getMessage());
+
+            XrayEnvironmentVariableSetter
+                    .failed()
+                    .setAction(build, listener);
+
             throw new AbortException(e.getMessage());
         } finally {
             client.shutdown();
