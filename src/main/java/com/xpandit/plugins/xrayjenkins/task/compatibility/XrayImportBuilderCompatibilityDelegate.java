@@ -56,7 +56,7 @@ public class XrayImportBuilderCompatibilityDelegate implements CompatibilityDele
         xrayImportBuilder.setImportFilePath(xrayImportBuilder.getDynamicFields().get(IMPORT_FILE_PATH));
         xrayImportBuilder.setTestExecKey(xrayImportBuilder.getDynamicFields().get(TEST_EXEC_KEY));
         xrayImportBuilder.setRevision(xrayImportBuilder.getDynamicFields().get(REVISION_FIELD));
-        xrayImportBuilder.setImportInfo(xrayImportBuilder.getDynamicFields().get(IMPORT_INFO));
+        xrayImportBuilder.setImportTestExecInfo(xrayImportBuilder.getDynamicFields().get(IMPORT_INFO));
         xrayImportBuilder.setImportToSameExecution("true");//true is by default
     }
 
@@ -69,7 +69,7 @@ public class XrayImportBuilderCompatibilityDelegate implements CompatibilityDele
                 && xrayImportBuilder.getImportFilePath() == null
                 && xrayImportBuilder.getTestExecKey() == null
                 && xrayImportBuilder.getRevision() == null
-                && xrayImportBuilder.getImportInfo() == null
+                && xrayImportBuilder.getImportTestExecInfo() == null
                 && xrayImportBuilder.getImportToSameExecution() == null;
     }
 
@@ -89,7 +89,7 @@ public class XrayImportBuilderCompatibilityDelegate implements CompatibilityDele
         putNotBlank(fields, IMPORT_FILE_PATH, xrayImportBuilder.getImportFilePath());
         putNotBlank(fields,TEST_EXEC_KEY,xrayImportBuilder.getTestExecKey());
         putNotBlank(fields, REVISION_FIELD, xrayImportBuilder.getRevision());
-        putNotBlank(fields,IMPORT_INFO, xrayImportBuilder.getImportInfo());
+        putNotBlank(fields,IMPORT_INFO, xrayImportBuilder.getImportTestExecInfo());
         putNotBlank(fields, INPUT_INFO_SWITCHER,xrayImportBuilder.getInputInfoSwitcher());
         return fields;
     }

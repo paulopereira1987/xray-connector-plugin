@@ -13,10 +13,12 @@ import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayImportBuilderCompatibilityDelegate;
 import com.xpandit.xray.model.DataParameter;
+import com.xpandit.xray.model.FileStream;
 import com.xpandit.xray.model.ParameterBean;
 import com.xpandit.xray.model.QueryParameter;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
+import com.xpandit.xray.model.StringContent;
 import com.xpandit.xray.model.UploadResult;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
@@ -92,6 +94,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 
 	private static final String SAME_EXECUTION_CHECKBOX = "importToSameExecution";
 	private static final String INPUT_INFO_SWITCHER = "inputInfoSwitcher";
+	private static final String INPUT_TEST_INFO_SWITCHER = "inputTestInfoSwitcher";
 	private static final String SERVER_INSTANCE = "serverInstance";
 	private static final String ERROR_LOG = "Error while performing import tasks";
 	private static final String TEST_ENVIRONMENTS = "testEnvironments";
@@ -101,15 +104,17 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 	private static final String IMPORT_FILE_PATH = "importFilePath";
 	private static final String TEST_EXEC_KEY = "testExecKey";
 	private static final String REVISION_FIELD = "revision";
-	private static final String IMPORT_INFO = "importInfo";
+	private static final String IMPORT_TEST_EXEC_INFO = "importInfo";
+	private static final String IMPORT_TEST_INFO = "importTestInfo";
 	private static final String FORMAT_SUFFIX = "formatSuffix";
 	private static final String CLOUD_DOC_URL = "https://confluence.xpand-it.com/display/XRAYCLOUD/Import+Execution+Results+-+REST";
 	private static final String SERVER_DOC_URL = "https://confluence.xpand-it.com/display/XRAY/Import+Execution+Results+-+REST";
 	private static final String MULTIPART = "multipart";
 
-    private String formatSuffix; //value of format select
+	private String formatSuffix; //value of format select
     private String serverInstance;//Configuration ID of the Jira instance
-    private String inputInfoSwitcher;//value of the input type switcher
+    private String inputInfoSwitcher;//value of the Test Exec input type switcher
+	private String inputTestInfoSwitcher; //value of the Test input type switcher
 	private String endpointName;
 	private String projectKey;
 	private String testEnvironments;
@@ -118,7 +123,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 	private String importFilePath;
 	private String testExecKey;
 	private String revision;
-	private String importInfo;
+	private String importTestExecInfo;
+	private String importTestInfo;
 	private String importToSameExecution;
 
 
@@ -162,7 +168,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 	 * @param importFilePath the path of the result file to be imported
 	 * @param testExecKey the test execution key
 	 * @param revision the revision
-	 * @param importInfo the importation info file or json content
+	 * @param importTestExecInfo the importation info file or json content
 	 * @param inputInfoSwitcher filePath or fileContent switcher
 	 */
 	@DataBoundConstructor
@@ -175,8 +181,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 							 String importFilePath,
 							 String testExecKey,
 							 String revision,
-							 String importInfo,
+							 String importTestExecInfo,
+							 String importTestInfo,
 							 String inputInfoSwitcher,
+							 String inputTestInfoSwitcher,
 							 String importToSameExecution){
     	this.serverInstance = serverInstance;
     	this.endpointName = endpointName;
@@ -189,8 +197,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
    		this.importFilePath = importFilePath;
    		this.testExecKey = testExecKey;
    		this.revision = revision;
-   		this.importInfo = importInfo;
-   		this.inputInfoSwitcher = inputInfoSwitcher;
+   		this.importTestExecInfo = importTestExecInfo;
+		this.inputInfoSwitcher = inputInfoSwitcher;
+   		this.importTestInfo = importTestInfo;
+		this.inputTestInfoSwitcher = inputTestInfoSwitcher;
 		this.importToSameExecution = importToSameExecution;
 
 		/**
@@ -205,13 +215,15 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 		Map<String,String> fields = new HashMap<>();
     	putNotBlank(fields, PROJECT_KEY, projectKey);
 		putNotBlank(fields, TEST_ENVIRONMENTS, testEnvironments);
-		putNotBlank(fields,TEST_PLAN_KEY, testPlanKey);
-		putNotBlank(fields,FIX_VERSION, fixVersion);
+		putNotBlank(fields, TEST_PLAN_KEY, testPlanKey);
+		putNotBlank(fields, FIX_VERSION, fixVersion);
 		putNotBlank(fields, IMPORT_FILE_PATH, importFilePath);
-		putNotBlank(fields,TEST_EXEC_KEY,testExecKey);
+		putNotBlank(fields, TEST_EXEC_KEY, testExecKey);
 		putNotBlank(fields, REVISION_FIELD, revision);
-		putNotBlank(fields,IMPORT_INFO, importInfo);
-		putNotBlank(fields, INPUT_INFO_SWITCHER,inputInfoSwitcher);
+		putNotBlank(fields, IMPORT_TEST_EXEC_INFO, importTestExecInfo);
+		putNotBlank(fields, IMPORT_TEST_INFO, importTestInfo);
+		putNotBlank(fields, INPUT_INFO_SWITCHER, inputInfoSwitcher);
+		putNotBlank(fields, INPUT_TEST_INFO_SWITCHER, inputTestInfoSwitcher);
 		return fields;
 	}
 
@@ -328,12 +340,28 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 		this.revision = revision;
 	}
 
-	public String getImportInfo() {
-		return importInfo;
+	public String getImportTestExecInfo() {
+		return importTestExecInfo;
 	}
 
-	public void setImportInfo(String importInfo) {
-		this.importInfo = importInfo;
+	public void setImportTestExecInfo(String importTestExecInfo) {
+		this.importTestExecInfo = importTestExecInfo;
+	}
+
+	public String getImportTestInfo() {
+		return importTestInfo;
+	}
+
+	public void setImportTestInfo(String importTestInfo) {
+		this.importTestInfo = importTestInfo;
+	}
+
+	public String getInputTestInfoSwitcher() {
+		return inputTestInfoSwitcher;
+	}
+
+	public void setInputTestInfoSwitcher(String inputTestInfoSwitcher) {
+		this.inputTestInfoSwitcher = inputTestInfoSwitcher;
 	}
 
 	public String getImportToSameExecution() {
@@ -373,6 +401,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
         	if(e.name().equals(endpointObj != null ? endpointObj.name() : null)){
 				bean.setFieldsConfiguration(getDynamicFieldsMap());
 			}
+
             addImportToSameExecField(e, bean);
         }
         return gson.toJson(formats);	
@@ -407,7 +436,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 			throw new XrayJenkinsGenericException("No file path was specified");
 		}
 
-		FilePath file = FileUtils.readFile(workspace,filePath.trim(),listener);
+		FilePath file = FileUtils.readFile(workspace, filePath.trim(), listener);
 		if(file.isDirectory() || !file.exists()){
 			throw new XrayJenkinsGenericException("File path is a directory or the file doesn't exist");
 		}
@@ -528,7 +557,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 					targetEndpoint = BuilderUtils.getGenericEndpointFromMultipartSuffix(targetEndpoint.getSuffix());
 				}
 
-				queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_EXEC_KEY, sameTestExecutionKey);
+				queryParams.put(QueryParameter.TEST_EXEC_KEY, sameTestExecutionKey);
 			}
 
 			Map<DataParameter, Content<?>> dataParams = new EnumMap<>(DataParameter.class);
@@ -536,22 +565,22 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 			if(StringUtils.isNotBlank(this.importFilePath)){
 				Content<?> results = new com.xpandit.xray.model.FileStream(resultsFile.getName(),resultsFile.read(),
                         targetEndpoint.getResultsMediaType());
-				dataParams.put(com.xpandit.xray.model.DataParameter.FILEPATH, results);
+				dataParams.put(DataParameter.FILEPATH, results);
 
 			}
-			if(StringUtils.isNotBlank(this.importInfo)){
-				String resolved = TaskUtils.expandVariable(env,this.importInfo);
+			if(StringUtils.isNotBlank(this.importTestExecInfo)){
+				String resolved = TaskUtils.expandVariable(env, this.importTestExecInfo);
 
-				Content<?> info;
+				Content<?> testExecInfo;
 				if(this.inputInfoSwitcher.equals("filePath")){
 					FilePath infoFile = getFile(workspace,resolved,listener);
-					info = new com.xpandit.xray.model.FileStream(infoFile.getName(),infoFile.read(),targetEndpoint.getInfoFieldMediaType());
-				}else{
-					info = new com.xpandit.xray.model.StringContent(resolved, targetEndpoint.getInfoFieldMediaType());
+					testExecInfo = new FileStream(infoFile.getName(),infoFile.read(), targetEndpoint.getInfoFieldMediaType());
+				} else {
+					testExecInfo = new StringContent(resolved, targetEndpoint.getInfoFieldMediaType());
 				}
 
 
-				dataParams.put(DataParameter.TEST_EXEC_INFO, info);
+				dataParams.put(DataParameter.TEST_EXEC_INFO, testExecInfo);
 			}
 
 			listener.getLogger().println("Starting to import results from " + resultsFile.getName() );
@@ -576,14 +605,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 		return endpoint.getName().contains(MULTIPART);
 	}
 
-	private Map<com.xpandit.xray.model.QueryParameter, String> prepareQueryParam(EnvVars env){
-		Map<com.xpandit.xray.model.QueryParameter,String> queryParams = new EnumMap<>(QueryParameter.class);
-		queryParams.put(com.xpandit.xray.model.QueryParameter.PROJECT_KEY, TaskUtils.expandVariable(env,projectKey));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_EXEC_KEY, TaskUtils.expandVariable(env,testExecKey));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_PLAN_KEY, TaskUtils.expandVariable(env,testPlanKey));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_ENVIRONMENTS, TaskUtils.expandVariable(env,testEnvironments));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.REVISION, TaskUtils.expandVariable(env,revision));
-		queryParams.put(com.xpandit.xray.model.QueryParameter.FIX_VERSION, TaskUtils.expandVariable(env,fixVersion));
+	private Map<QueryParameter, String> prepareQueryParam(EnvVars env){
+		Map<QueryParameter,String> queryParams = new EnumMap<>(QueryParameter.class);
+		queryParams.put(QueryParameter.PROJECT_KEY, TaskUtils.expandVariable(env, projectKey));
+		queryParams.put(QueryParameter.TEST_EXEC_KEY, TaskUtils.expandVariable(env, testExecKey));
+		queryParams.put(QueryParameter.TEST_PLAN_KEY, TaskUtils.expandVariable(env, testPlanKey));
+		queryParams.put(QueryParameter.TEST_ENVIRONMENTS, TaskUtils.expandVariable(env, testEnvironments));
+		queryParams.put(QueryParameter.REVISION, TaskUtils.expandVariable(env, revision));
+		queryParams.put(QueryParameter.FIX_VERSION, TaskUtils.expandVariable(env, fixVersion));
 		return queryParams;
 	}
 
@@ -626,8 +655,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
 	}
-	
-	
+
 	@Extension
     public static class Descriptor extends BuildStepDescriptor<Publisher> {
         private static long BUILD_STEP_SEED = 0;
@@ -658,8 +686,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 					fields.get(IMPORT_FILE_PATH),
 					fields.get(TEST_EXEC_KEY),
 					fields.get(REVISION_FIELD),
-					fields.get(IMPORT_INFO),
+					fields.get(IMPORT_TEST_EXEC_INFO),
+					fields.get(IMPORT_TEST_INFO),
 					fields.get(INPUT_INFO_SWITCHER),
+					fields.get(INPUT_TEST_INFO_SWITCHER),
 					fields.get(SAME_EXECUTION_CHECKBOX));
         }
 
