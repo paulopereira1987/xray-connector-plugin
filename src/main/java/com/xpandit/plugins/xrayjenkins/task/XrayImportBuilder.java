@@ -12,6 +12,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayImportBuilderCompatibilityDelegate;
+import com.xpandit.xray.model.DataParameter;
 import com.xpandit.xray.model.ParameterBean;
 import com.xpandit.xray.model.QueryParameter;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
@@ -518,7 +519,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 									   @Nullable String sameTestExecutionKey) throws InterruptedException, IOException{
 		try {
 		    Endpoint targetEndpoint = lookupForEndpoint();
-			Map<com.xpandit.xray.model.QueryParameter,String> queryParams = prepareQueryParam(env);
+			Map<QueryParameter,String> queryParams = prepareQueryParam(env);
 
 			if(BuilderUtils.isEnvVariableUndefined(this.testExecKey)
 					&& StringUtils.isNotBlank(sameTestExecutionKey)
@@ -530,10 +531,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 				queryParams.put(com.xpandit.xray.model.QueryParameter.TEST_EXEC_KEY, sameTestExecutionKey);
 			}
 
-			Map<com.xpandit.xray.model.DataParameter,Content> dataParams = new HashMap<>();
+			Map<DataParameter, Content<?>> dataParams = new EnumMap<>(DataParameter.class);
 
 			if(StringUtils.isNotBlank(this.importFilePath)){
-				Content results = new com.xpandit.xray.model.FileStream(resultsFile.getName(),resultsFile.read(),
+				Content<?> results = new com.xpandit.xray.model.FileStream(resultsFile.getName(),resultsFile.read(),
                         targetEndpoint.getResultsMediaType());
 				dataParams.put(com.xpandit.xray.model.DataParameter.FILEPATH, results);
 
@@ -541,7 +542,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 			if(StringUtils.isNotBlank(this.importInfo)){
 				String resolved = TaskUtils.expandVariable(env,this.importInfo);
 
-				Content info;
+				Content<?> info;
 				if(this.inputInfoSwitcher.equals("filePath")){
 					FilePath infoFile = getFile(workspace,resolved,listener);
 					info = new com.xpandit.xray.model.FileStream(infoFile.getName(),infoFile.read(),targetEndpoint.getInfoFieldMediaType());
@@ -550,7 +551,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep{
 				}
 
 
-				dataParams.put(com.xpandit.xray.model.DataParameter.INFO, info);
+				dataParams.put(DataParameter.TEST_EXEC_INFO, info);
 			}
 
 			listener.getLogger().println("Starting to import results from " + resultsFile.getName() );
