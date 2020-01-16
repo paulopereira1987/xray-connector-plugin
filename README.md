@@ -47,7 +47,7 @@ properties:
 
 1.  **Configuration alias:** the name you want to give to this
     configuration
-2.  **Hosting: **Hosting (instance type) in this case Cloud/Server/Data
+2.  **Hosting:** Hosting (instance type) in this case Cloud/Server/Data
     Center
 3.  **(Server/Data Center only) Server Address**: The address of the
     Jira Server where Xray is running
@@ -71,7 +71,7 @@ save the changes.
 
 ### Job Tasks
 
-Currently, we support **Freestyle**,** Pipeline, Multi-configuration
+Currently, we support **Freestyle**, **Pipeline**, **Multi-configuration
 Projects** and **Maven projects**.
 
 This plugin provides 2 new Build tasks:
