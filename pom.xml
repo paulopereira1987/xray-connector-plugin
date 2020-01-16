@@ -21,7 +21,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<name>Xray Test Management for Jira Plugin</name>
+	<name>Xray - Test Management for Jira Plugin</name>
 	<description>Integrates Jenkins with Xray</description>
 	<url>https://github.com/jenkinsci/xray-connector-plugin</url>
 
@@ -35,7 +35,7 @@
 	<developers>
 		<developer>
 			<id>Support</id>
-			<name>Xray Support</name>
+			<name>Xray - Test Management for Jira</name>
 			<email>xray.support@xpand-it.com</email>
 		</developer>
 	</developers>
