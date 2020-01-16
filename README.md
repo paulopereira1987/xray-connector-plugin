@@ -109,7 +109,7 @@ Task***, in order to import your Test Results in the following formats:
 -   NUnit XML & NUnit XML Multipart
 -   Robot XML & Robot XML Multipart
 -   TestNG XML & TestNG XML Multipart
--   xUnit XML & xUnit XML Multipart **(Xray Cloud only)**
+-   xUnit XML & xUnit XML Multipart (Xray Cloud only)
 
 ![](https://user-images.githubusercontent.com/11166836/72537277-c1151400-3873-11ea-9a1b-f3baebc2c33f.png)
 
