@@ -96,10 +96,8 @@ tasks responsible for:
 4.  **Importing the execution results back to Jira**
 
   
-
 ![](https://user-images.githubusercontent.com/11166836/72537276-c1151400-3873-11ea-8cc0-c26a5af113de.png)
 
-  
 
 In the **Post-build Actions**, you can add the ***Xray: Results Import
 Task***, in order to import your Test Results in the following formats:
@@ -116,8 +114,8 @@ Task***, in order to import your Test Results in the following formats:
 ![](https://user-images.githubusercontent.com/11166836/72537277-c1151400-3873-11ea-9a1b-f3baebc2c33f.png)
 
   
-
-## Want to learn more?
+### Want to learn more?
 
 Check out [Xray Test Management website](https://getxray.app?utm_source=jenkins-connector&utm_medium=github&utm_campaign=jenkins-connector) to understand how to leverage Jira for Test Management and [start a free trial](https://marketplace.atlassian.com/apps/1211769/xray-test-management-for-jira?utm_source=jenkins-connector&utm_medium=github&utm_campaign=jenkins-connector).
 
+If you need any help using in Xray or this plugin, you can contact us by using our [Support System](xraysupport.xpand-it.com/).
