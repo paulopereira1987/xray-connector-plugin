@@ -1,12 +1,12 @@
-#Xray – Test Management for Jira
+# Xray – Test Management for Jira
 
-##Continuous Integration using Jenkins and Xray
+## Continuous Integration using Jenkins and Xray
   
 This plugin enables continuous integration using Jenkins and Xray Test
 Management. In a nutshell, this connector provides tasks to publish test
 results from Jenkins to Xray.  
 
-![](https://user-images.githubusercontent.com/11166836/72537100-68457b80-3873-11ea-97a9-7c3b1025362d.png){height="250"}
+![](https://user-images.githubusercontent.com/11166836/72537100-68457b80-3873-11ea-97a9-7c3b1025362d.png)
 
 Xray is the leading Quality Assurance and Test Management app for Jira. More than 4.5 million testers, developers and QA managers trust Xray to manage 100+ million test cases each month. Xray is a mission-critical tool at over 5,000 companies in 70+ countries, including 137 of the Global 500.
 
@@ -67,7 +67,7 @@ After setting the instances, you can test your connection to Jira, by
 using the and ***Test Connection*** button.
 When you are done configuring your Jira instances, don't forget to
 save the changes.
-![](https://user-images.githubusercontent.com/11166836/72537278-c1151400-3873-11ea-80df-f10b2d993305.png){height="250"}
+![](https://user-images.githubusercontent.com/11166836/72537278-c1151400-3873-11ea-80df-f10b2d993305.png)
 
 ### Job Tasks
 
@@ -97,7 +97,7 @@ tasks responsible for:
 
   
 
-![](https://user-images.githubusercontent.com/11166836/72537276-c1151400-3873-11ea-8cc0-c26a5af113de.png){height="400"}
+![](https://user-images.githubusercontent.com/11166836/72537276-c1151400-3873-11ea-8cc0-c26a5af113de.png)
 
   
 
@@ -113,7 +113,7 @@ Task***, in order to import your Test Results in the following formats:
 -   TestNG XML & TestNG XML Multipart
 -   xUnit XML & xUnit XML Multipart **(Xray Cloud only)**
 
-**![](https://user-images.githubusercontent.com/11166836/72537277-c1151400-3873-11ea-9a1b-f3baebc2c33f.png){height="400"}**
+![](https://user-images.githubusercontent.com/11166836/72537277-c1151400-3873-11ea-9a1b-f3baebc2c33f.png)
 
   
 
