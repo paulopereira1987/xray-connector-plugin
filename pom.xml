@@ -21,9 +21,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<name>Xray Connector Plugin</name>
+	<name>Xray Test Management for Jira Plugin</name>
 	<description>Integrates Jenkins with Xray</description>
-	<url>https://wiki.jenkins.io/display/JENKINS/Xray+Connector+Plugin</url>
+	<url>https://github.com/jenkinsci/xray-connector-plugin</url>
 
 	<licenses>
 		<license>
