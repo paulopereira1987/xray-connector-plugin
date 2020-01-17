@@ -140,12 +140,12 @@ public class ServerConfiguration extends GlobalConfiguration {
         final ConnectionResult connectionResult;
 
         if (hosting.equals(HostingType.CLOUD.toString())) {
-            connectionResult = (new XrayCloudClientImpl(username, password, proxyBean)).testConnection();
+            connectionResult = new XrayCloudClientImpl(username, password, proxyBean).testConnection();
         } else if (hosting.equals(HostingType.SERVER.toString())) {
             if(StringUtils.isBlank(serverAddress)) {
                 return FormValidation.error("Server address can't be empty");
             }
-            connectionResult = (new XrayClientImpl(serverAddress, username, password, proxyBean)).testConnection();
+            connectionResult = new XrayClientImpl(serverAddress, username, password, proxyBean).testConnection();
         } else {
             return FormValidation.error("Hosting type not recognized.");
         }
