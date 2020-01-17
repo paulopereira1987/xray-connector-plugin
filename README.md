@@ -95,6 +95,7 @@ tasks responsible for:
 3.  Executing the tests in the CI environment
 4.  **Importing the execution results back to Jira**
 
+Alternatively, you can also use Cucumber features that are hosted outside Xray and import them to Jira by using our **Cucumber Features Import Task**.
   
 ![](https://user-images.githubusercontent.com/11166836/72537276-c1151400-3873-11ea-8cc0-c26a5af113de.png)
 
