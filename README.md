@@ -80,8 +80,7 @@ The ***Xray: Cucumber Features Export Task*** and the ***Xray: Cucumber
 Features Import Task***
 
 Both tasks can be used while executing Cucumber tests: In a
-typical [Cucumber
-Workflow](http://confluence.xpand-addons.com/display/XRAY/Testing+with+Cucumber),
+typical [Cucumber Workflow](https://confluence.xpand-it.com/pages/releaseview.action?pageId=46858243),
 after having created a Cucumber project and the Cucumber tests specified
 in Jira, you may want to have a project that **exports** the features
 from Jira, executes the automated tests on a CI environment and then
@@ -93,12 +92,13 @@ tasks responsible for:
 1.  Pulling the Cucumber project
 2.  **Exporting Cucumber features from Jira to your Cucumber project**
 3.  Executing the tests in the CI environment
-4.  **Importing the execution results back to Jira**
+4.  **Importing the execution results back to Jira** ([see section below](#import-results))
 
 Alternatively, you can also use Cucumber features that are hosted outside Xray and import them to Jira by using our **Cucumber Features Import Task**.
   
 ![](https://user-images.githubusercontent.com/11166836/72537276-c1151400-3873-11ea-8cc0-c26a5af113de.png)
 
+#### Import Results
 
 In the **Post-build Actions**, you can add the ***Xray: Results Import
 Task***, in order to import your Test Results in the following formats:
