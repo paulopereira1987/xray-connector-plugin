@@ -15,6 +15,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.xray.service.impl.XrayClientImpl;
 import com.xpandit.xray.service.impl.XrayCloudClientImpl;
+import com.xpandit.xray.service.impl.bean.ConnectionResult;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import hudson.Extension;
 import hudson.model.Item;
@@ -33,13 +34,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 
 @Extension
 public class ServerConfiguration extends GlobalConfiguration {
-	
-	private List<XrayInstance> serverInstances = new ArrayList<>();
+
+    private static final int MAX_ERROR_TEXT_LENGTH = 200; // This is around 2-3 lines in the Server Configuration UI.
+
+    private static final Logger logger = LoggerFactory.getLogger(ServerConfiguration.class);
+
+    private List<XrayInstance> serverInstances = new ArrayList<>();
 	
 	public ServerConfiguration(){
 		load();
@@ -64,11 +71,11 @@ public class ServerConfiguration extends GlobalConfiguration {
 	}
 
 	public String getCloudHostingTypeName(){
-	    return HostingType.getCloudHostingTypeName();
+	    return HostingType.getCloudHostingName();
     }
 
     public String getServerHostingTypeName(){
-        return HostingType.getServerHostingTypeName();
+        return HostingType.getServerHostingName();
     }
 	
 	public static ServerConfiguration get() {
@@ -130,24 +137,33 @@ public class ServerConfiguration extends GlobalConfiguration {
         final String username = credential.getUsername();
         final String password = credential.getPassword().getPlainText();
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
-        boolean isConnectionOk;
+        final ConnectionResult connectionResult;
 
-        if (hosting.equals(HostingType.CLOUD.getTypeName())) {
-            isConnectionOk = (new XrayCloudClientImpl(username, password, proxyBean)).testConnection();
-        } else if (hosting.equals(HostingType.SERVER.getTypeName())) {
+        if (hosting.equals(HostingType.CLOUD.toString())) {
+            connectionResult = new XrayCloudClientImpl(username, password, proxyBean).testConnection();
+        } else if (hosting.equals(HostingType.SERVER.toString())) {
             if(StringUtils.isBlank(serverAddress)) {
                 return FormValidation.error("Server address can't be empty");
             }
-            isConnectionOk = (new XrayClientImpl(serverAddress, username, password, proxyBean)).testConnection();
+            connectionResult = new XrayClientImpl(serverAddress, username, password, proxyBean).testConnection();
         } else {
             return FormValidation.error("Hosting type not recognized.");
         }
 
-        if (isConnectionOk) {
+        if (connectionResult.isSuccessful()) {
             return FormValidation.ok("Connection: Success!");
         } else {
-            return FormValidation.error("Could not establish connection.");
+            final String errorText = "Could not establish connection.\n" +
+                    limitStringSize(connectionResult.getErrorText()) +
+                    "\n\nFor more information please check the logs.";
+
+            logger.error("Error while connecting to instance:\n{}", connectionResult.getErrorText());
+            return FormValidation.error(errorText);
         }
+    }
+
+    private String limitStringSize(final String errorText) {
+	    return StringUtils.trim(StringUtils.substring(errorText, 0, MAX_ERROR_TEXT_LENGTH));
     }
 
     private void checkForCompatibility(){

@@ -1,10 +1,10 @@
-package com.xpandit.plugins.xrayjenkins.task;
+package com.xpandit.plugins.xrayjenkins.Utils;
 
 import hudson.EnvVars;
 import org.apache.commons.lang3.StringUtils;
 
-class TaskUtils {
-    private TaskUtils() {}
+public class EnvironmentVariableUtil {
+    private EnvironmentVariableUtil() {}
 
     /**
      * Tries to expand a variable value, using the Jenkins Variable Environment.
@@ -14,7 +14,7 @@ class TaskUtils {
      * @param variable the variable to be replaced
      * @return the variable value, if it's defined, otherwise, it will return the variable itself.
      */
-    static String expandVariable(final EnvVars environment, final String variable) {
+    public static String expandVariable(final EnvVars environment, final String variable) {
         if (environment == null) {
             return StringUtils.defaultString(variable);
         } else if (StringUtils.isNotBlank(variable)) {

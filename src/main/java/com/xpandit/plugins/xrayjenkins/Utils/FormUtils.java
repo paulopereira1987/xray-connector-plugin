@@ -33,7 +33,7 @@ public class FormUtils {
             if(instanceHostingType == null) {
                 throw new XrayJenkinsGenericException("Null hosting type found");
             } else {
-                items.add(sc.getAlias(),instanceHostingType.getTypeName() + "-" + sc.getConfigID());
+                items.add(sc.getAlias(),instanceHostingType.toString() + "-" + sc.getConfigID());
             }
         }
         return items;

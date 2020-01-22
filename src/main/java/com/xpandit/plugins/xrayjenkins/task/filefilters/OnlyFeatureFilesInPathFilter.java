@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 /**
- * This class it's a FileFilter implementation that will only "accept" files that are both:
+ * This class is a FileFilter implementation that will only "accept" files that are both:
  * 1) In the Set of "valid" files.
  * 2) Has been modified in the last <i>"lastModified"</i> minutes. (if null, we considered all files has been modified).
  */
