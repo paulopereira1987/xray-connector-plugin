@@ -437,7 +437,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 		listener.getLogger().println("Starting XRAY: Results Import Task...");
 
         listener.getLogger().println("##########################################################");
-		listener.getLogger().println("####   Xray is importing the feature files  ####");
+		listener.getLogger().println("####     Xray is importing the execution results      ####");
         listener.getLogger().println("##########################################################");
         XrayInstance importInstance = ConfigurationUtils.getConfiguration(serverInstance);
 
