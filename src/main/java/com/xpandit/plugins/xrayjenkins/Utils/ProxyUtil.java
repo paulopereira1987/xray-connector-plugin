@@ -11,6 +11,9 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 
+import javax.annotation.Nullable;
+import java.util.Optional;
+
 public class ProxyUtil {
     private ProxyUtil() {}
 
@@ -19,13 +22,17 @@ public class ProxyUtil {
      * 
      * @return If there is an proxy configured, it will return the bean with this information, otherwise, it will return null.
      */
+    @Nullable
     public static HttpRequestProvider.ProxyBean createProxyBean() {
-        ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
+        ProxyConfiguration proxyConfiguration = Optional.ofNullable(Jenkins.getInstanceOrNull())
+                .map(jenkins -> jenkins.proxy)
+                .orElse(null);
+
         if (proxyConfiguration != null) {
             final HttpHost proxy = getProxy(proxyConfiguration);
             final CredentialsProvider credentialsProvider = getCredentialsProvider(proxyConfiguration);
             
-            return new HttpRequestProvider.ProxyBean(proxy, credentialsProvider);
+            return new HttpRequestProvider.ProxyBean(proxy, credentialsProvider, proxyConfiguration.getNoProxyHostPatterns());
         }
         
         return null;
