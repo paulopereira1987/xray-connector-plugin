@@ -47,11 +47,11 @@ public class ProxyUtil {
             return null;
         }
 
-        final CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         final AuthScope authScope = new AuthScope(proxyConfiguration.name, proxyConfiguration.port);
         final Credentials credentials = new UsernamePasswordCredentials(proxyConfiguration.getUserName(), proxyConfiguration.getPassword());
         
-        credsProvider.setCredentials(authScope, credentials);
-        return credsProvider;
+        credentialsProvider.setCredentials(authScope, credentials);
+        return credentialsProvider;
     }
 }
