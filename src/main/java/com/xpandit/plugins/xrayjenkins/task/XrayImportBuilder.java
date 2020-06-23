@@ -480,6 +480,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 			ObjectMapper mapper = new ObjectMapper();
 			String key = null;
 			for(FilePath fp : FileUtils.getFiles(workspace, resolved, listener)){
+				//TODO: XRAYJENKINS-80 Sleep if upload result is 429 (status code)
+				//TODO: XRAYJENKINS-80 Repeat last upload if 429
+
 				result = uploadResults(workspace, listener,client, fp, env, key);
 				uploadResults.add(result);
 
@@ -579,6 +582,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
 			UploadResult result = client.uploadResults(targetEndpoint, dataParams, queryParams);
 
+			//TODO XRAYJENKINS-80 if 429, don't print logs below
             listener.getLogger().println("Response: (" + result.getStatusCode() + ") " + result.getMessage());
 			listener.getLogger().println("Successfully imported " + targetEndpoint.getName() + " results from " + resultsFile.getName());
 			return result;
