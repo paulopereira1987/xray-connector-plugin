@@ -32,6 +32,7 @@ import com.xpandit.xray.service.XrayImporter;
 import com.xpandit.xray.service.impl.XrayImporterCloudImpl;
 import com.xpandit.xray.service.impl.XrayImporterImpl;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
+import com.xpandit.xray.util.UploadResultUtil;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -50,8 +51,6 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.http.HttpHeaders;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -66,7 +65,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -544,9 +542,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
         // Xray Cloud may return a 429 (Too Many Requests) response, in this case, we want to retry up to 3 times (after the waiting period).
         while (result.getStatusCode() == TOO_MANY_REQUESTS_STATUS_CODE && tries < MAX_TRIES) {
-            final long sleepTimeSeconds = result.getHeaderValue(HttpHeaders.RETRY_AFTER)
-                    .flatMap(this::getRetryTime)
-                    .orElse(DEFAULT_RETRY_TIME_SECONDS);
+            final long sleepTimeSeconds = UploadResultUtil.getRetryTime(result)
+                                                          .orElse(DEFAULT_RETRY_TIME_SECONDS);
 
             listener.getLogger().println("Too Many Requests: Waiting " + sleepTimeSeconds + " seconds - try #" + tries);
             Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTimeSeconds));
@@ -637,12 +634,6 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         } finally {
             client.shutdown();
         }
-    }
-
-    private Optional<Long> getRetryTime(String headerValue) {
-        return Optional.ofNullable(headerValue)
-                .filter(NumberUtils::isDigits)
-                .map(Long::parseLong);
     }
 
     private boolean isMultipartEndpoint(Endpoint endpoint) {
