@@ -8,47 +8,30 @@
 package com.xpandit.plugins.xrayjenkins.task;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
-import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
-import com.xpandit.plugins.xrayjenkins.model.HostingType;
-import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
-import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayImportBuilderCompatibilityDelegate;
-import com.xpandit.xray.model.ParameterBean;
-import com.xpandit.xray.model.QueryParameter;
-import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
-import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
-import com.xpandit.xray.model.UploadResult;
-import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
-import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.apache.commons.collections.MapUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
+import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
+import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
+import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayImportBuilderCompatibilityDelegate;
 import com.xpandit.xray.exception.XrayClientCoreGenericException;
 import com.xpandit.xray.model.Content;
 import com.xpandit.xray.model.Endpoint;
 import com.xpandit.xray.model.FormatBean;
+import com.xpandit.xray.model.ParameterBean;
+import com.xpandit.xray.model.QueryParameter;
+import com.xpandit.xray.model.UploadResult;
 import com.xpandit.xray.service.XrayImporter;
-import com.xpandit.xray.service.impl.XrayImporterImpl;
 import com.xpandit.xray.service.impl.XrayImporterCloudImpl;
-
+import com.xpandit.xray.service.impl.XrayImporterImpl;
+import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -65,8 +48,26 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.http.HttpHeaders;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
 
@@ -109,6 +110,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 	private static final String CLOUD_DOC_URL = "https://confluence.xpand-it.com/display/XRAYCLOUD/Import+Execution+Results+-+REST";
 	private static final String SERVER_DOC_URL = "https://confluence.xpand-it.com/display/XRAY/Import+Execution+Results+-+REST";
 	private static final String MULTIPART = "multipart";
+	private static final long DEFAULT_RETRY_TIME_SECONDS = 61L;
+	private static final int MAX_TRIES = 3;//TODO define value
 
     private String formatSuffix; //value of format select
     private String serverInstance;//Configuration ID of the Jira instance
@@ -484,13 +487,26 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 				//TODO: XRAYJENKINS-80 Repeat last upload if 429
 
 				result = uploadResults(workspace, listener,client, fp, env, key);
+
+				int tries = 1;//tries start with 1 because we count the original request as a try
+				while (result.getStatusCode() == 429 && tries < MAX_TRIES) {
+					final long sleepTimeSeconds = result.getHeaderValue(HttpHeaders.RETRY_AFTER)
+											 .map(this::getRetryTime)
+											 .orElse(DEFAULT_RETRY_TIME_SECONDS);
+
+					Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTimeSeconds));
+
+					result = uploadResults(workspace, listener, client, fp, env, key);
+					tries++;
+				}
+
 				uploadResults.add(result);
 
 				if(key == null && "true".equals(importToSameExecution)){
 					HostingType instanceType = importInstance.getHosting();
 
 					if (instanceType == HostingType.SERVER) {
-						
+
 						Map<String, Object> resultMap = mapper.readValue(result.getMessage(), Map.class);
 						if (MapUtils.isNotEmpty(resultMap)) {
 							Map<String, String> testExecIssue = (Map<String, String>) resultMap.get("testExecIssue");
@@ -499,11 +515,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 							}
 						}
 					} else if (instanceType == HostingType.CLOUD) {
-						
+
 						Map<String, String> map = mapper.readValue(result.getMessage(), Map.class);
 						key =  map.get("key");
 					} else {
-						
+
 						throw new XrayJenkinsGenericException("Instance type not found.");
 					}
 
@@ -597,6 +613,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 		}finally{
 			client.shutdown();
 		}
+	}
+
+	private long getRetryTime(String value) {
+		if (NumberUtils.isDigits(value)) {
+			return Long.parseLong(value);
+		}
+
+		return DEFAULT_RETRY_TIME_SECONDS;
 	}
 
 	private boolean isMultipartEndpoint(Endpoint endpoint) {

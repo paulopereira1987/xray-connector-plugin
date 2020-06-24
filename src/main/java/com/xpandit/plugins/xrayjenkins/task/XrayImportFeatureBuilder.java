@@ -36,18 +36,18 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class is responsible for performing the Xray: Cucumber Features Import Task
