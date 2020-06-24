@@ -548,6 +548,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     .flatMap(this::getRetryTime)
                     .orElse(DEFAULT_RETRY_TIME_SECONDS);
 
+            listener.getLogger().println("Too Many Requests: Waiting " + sleepTimeSeconds + " seconds - try #" + tries);
             Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTimeSeconds));
 
             result = tryUploadResults(workspace, listener, client, filePath, environmentVariables, key);
