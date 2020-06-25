@@ -111,9 +111,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private static final String CLOUD_DOC_URL = "https://confluence.xpand-it.com/display/XRAYCLOUD/Import+Execution+Results+-+REST";
     private static final String SERVER_DOC_URL = "https://confluence.xpand-it.com/display/XRAY/Import+Execution+Results+-+REST";
     private static final String MULTIPART = "multipart";
-    private static final long DEFAULT_RETRY_TIME_SECONDS = 61L; // This value is based in Xray Cloud wait time (60s) + 1 second margin.
     private static final int MAX_TRIES = 3;
-    private static final int TOO_MANY_REQUESTS_STATUS_CODE = 429;
 
 
     private String formatSuffix; //value of format select
@@ -543,7 +541,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         int tries = 1; // Tries start with 1 because we count the original request as a try.
 
         // Xray Cloud may return a 429 (Too Many Requests) response, in this case, we want to retry up to 3 times (after the waiting period).
-        while (result.getStatusCode() == TOO_MANY_REQUESTS_STATUS_CODE && tries < MAX_TRIES) {
+        while (result.isTooManyRequests() && tries < MAX_TRIES) {
             final long sleepTimeSeconds = UploadResultUtil.getRetryTime(result)
                                                           .orElse(MAX_RETRY_AFTER_TIME_SECONDS);
 
@@ -563,7 +561,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             tries++;
         }
 
-        if (result.getStatusCode() == TOO_MANY_REQUESTS_STATUS_CODE && tries >= MAX_TRIES) {
+        if (result.isTooManyRequests() && tries >= MAX_TRIES) {
             throw new XrayJenkinsGenericException(result.getMessage());
         }
 
