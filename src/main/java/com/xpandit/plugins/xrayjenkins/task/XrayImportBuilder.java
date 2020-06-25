@@ -368,7 +368,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
     public String defaultFormats() {
 
-        /**
+        /*
          * Compatibility fix - the job was created on a pré-1.3.0 version, but has never been runned in post-1.3.0 version.
          * In this case, if the user opens the job configurations, the fields must be populated.
          */
@@ -431,7 +431,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                         @Nonnull Launcher launcher,
                         @Nonnull TaskListener listener)
             throws InterruptedException, IOException {
-        /**
+        /*
          * Compatibility fix:
          * Forward case - the job was created on pré-1.3.0. blueprint fields need to be populated with values
          * Backward case - due to some bugs fixed in 1.3.0, we will reassign values for deprecated fields for each build
