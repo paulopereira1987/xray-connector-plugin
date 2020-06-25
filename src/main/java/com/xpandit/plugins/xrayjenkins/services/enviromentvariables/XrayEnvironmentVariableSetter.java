@@ -18,9 +18,9 @@ import java.util.Map;
 
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.FALSE_STRING;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.TRUE_STRING;
-import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getModifiedTestKeys;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getImportedFeatureIssueKeys;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getModifiedTestExecutionsKeys;
+import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getModifiedTestKeys;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.getRawResponses;
 import static com.xpandit.plugins.xrayjenkins.services.enviromentvariables.util.XrayEnvironmentVariableSetterUtil.isUploadSuccessful;
 
