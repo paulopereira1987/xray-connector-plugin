@@ -60,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -69,6 +70,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
+import static com.xpandit.xray.util.UploadResultUtil.MAX_RETRY_AFTER_TIME_SECONDS;
 
 /**
  * This class is responsible for performing the Xray: Results Import Task
@@ -543,13 +545,17 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         // Xray Cloud may return a 429 (Too Many Requests) response, in this case, we want to retry up to 3 times (after the waiting period).
         while (result.getStatusCode() == TOO_MANY_REQUESTS_STATUS_CODE && tries < MAX_TRIES) {
             final long sleepTimeSeconds = UploadResultUtil.getRetryTime(result)
-                                                          .orElse(DEFAULT_RETRY_TIME_SECONDS);//TODO XRAYJENKINS-80 replace with MAX_RETRY_TIME
-            /**
-             * TODO XRAYJENKINS-80 if retry-time is greater than MAX_RETRY_TIME, we abort then log
-             */
+                                                          .orElse(MAX_RETRY_AFTER_TIME_SECONDS);
+
             listener.getLogger().println("Too Many Requests: Waiting " + sleepTimeSeconds + " seconds - try #" + tries);
 
-            if (sleepTimeSeconds > 0) {
+            if (sleepTimeSeconds > MAX_RETRY_AFTER_TIME_SECONDS) { // If the server asks us to wait to much time, we abort the whole import.
+                final String logText = String.format("Too Many Requests: Wait time (%s seconds) exceeds the maximum allowed (%s seconds)",
+                        sleepTimeSeconds, MAX_RETRY_AFTER_TIME_SECONDS);
+
+                listener.getLogger().println(logText);
+                throw new XrayJenkinsGenericException(result.getMessage());
+            } else if (sleepTimeSeconds > 0) {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(sleepTimeSeconds));
             }
 
