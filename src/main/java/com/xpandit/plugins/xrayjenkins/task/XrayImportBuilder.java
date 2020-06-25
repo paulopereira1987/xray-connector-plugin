@@ -543,8 +543,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         // Xray Cloud may return a 429 (Too Many Requests) response, in this case, we want to retry up to 3 times (after the waiting period).
         while (result.getStatusCode() == TOO_MANY_REQUESTS_STATUS_CODE && tries < MAX_TRIES) {
             final long sleepTimeSeconds = UploadResultUtil.getRetryTime(result)
-                                                          .orElse(DEFAULT_RETRY_TIME_SECONDS);
-
+                                                          .orElse(DEFAULT_RETRY_TIME_SECONDS);//TODO XRAYJENKINS-80 replace with MAX_RETRY_TIME
+            /**
+             * TODO XRAYJENKINS-80 if retry-time is greater than MAX_RETRY_TIME, we abort then log
+             */
             listener.getLogger().println("Too Many Requests: Waiting " + sleepTimeSeconds + " seconds - try #" + tries);
 
             if (sleepTimeSeconds > 0) {
