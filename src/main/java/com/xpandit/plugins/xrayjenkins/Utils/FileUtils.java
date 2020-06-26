@@ -174,8 +174,7 @@ public class FileUtils {
      * @return the <code>FilePath</code>
      */
     public static FilePath readFile(FilePath workspace, String filePath, TaskListener listener) {
-        FilePath f = new FilePath(workspace,
-                                  filePath); //TODO XRAYJENKINS-80 check if this works for non glob endpoints...
+        FilePath f = new FilePath(workspace, filePath);
         listener.getLogger().println("File: " + f.getRemote());
         return f;
     }
