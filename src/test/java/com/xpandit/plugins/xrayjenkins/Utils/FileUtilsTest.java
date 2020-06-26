@@ -121,6 +121,22 @@ public class FileUtilsTest {
     }
 
     @Test
+    public void testGetFileWithSophisticatedGlobExpressionAbsolutePath(){
+        try{
+            try(PrintStream logger = new PrintStream(workspace.newFile(LOGGER_NAME))){
+                when(taskListener.getLogger()).thenReturn(logger);
+            }
+            prepareFolders();
+            String resultsPath = getAbsoluteDirectoryPath() + "feb*.xml";
+            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+            Assert.assertEquals(2, matchingFiles.size());
+        } catch (IOException | InterruptedException e){
+            Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
+        }
+        workspace.delete();
+    }
+
+    @Test
     public void testGetFileWithFileCompleteName(){
         try{
             try(PrintStream logger = new PrintStream(workspace.newFile(LOGGER_NAME))){
@@ -137,7 +153,6 @@ public class FileUtilsTest {
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
         }
-
     }
 
     private String getAbsoluteDirectoryPath() {
