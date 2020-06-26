@@ -11,15 +11,18 @@ import com.google.common.collect.Sets;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import java.util.Collections;
 
 public class FileUtils {
 
@@ -118,8 +121,27 @@ public class FileUtils {
         if(StringUtils.isBlank(globExpression)){
             throw new XrayJenkinsGenericException("The file path cannot be null nor empty");
         }
-        FilePath [] pathArray = workspace.list(globExpression, "", false);
-        if(pathArray.length == 0){
+
+        /* TODO XRAYJENKINS-87 list works with a base path
+          /Users/dmdu/Desktop/java-junit-calc/target/surefire-reports/*.xml
+           -> /Users
+           -> /dmdu/Desktop/java-junit-calc/target/surefire-reports/*.xml
+
+           /Users.list('/dmdu/Desktop/java-junit-calc/target/surefire-reports/*.xml', "", false)
+         */
+
+        Path p = Paths.get(globExpression);
+        FilePath base;
+        String regexExpression = globExpression;
+        if (p.isAbsolute()) {
+            base = new FilePath(p.getParent().toFile());
+            regexExpression = p.getFileName().toString();
+        } else {
+            base = workspace;
+        }
+
+        FilePath [] pathArray = base.list(regexExpression, "", false);
+        if(pathArray.length == 0){//TODO XRAYJENKINS-87 Check this case
             //If the path was not considered a glob expression, we now need to try to get the file by it's path using readFile method
             FilePath filePath = readFile(workspace, globExpression, listener);
             if(!filePath.exists()){
@@ -140,10 +162,27 @@ public class FileUtils {
      * @param listener the task listener
      * @return the <code>FilePath</code>
      */
-    public static FilePath readFile(FilePath workspace, String filePath, TaskListener listener){
-        FilePath f = new FilePath(workspace, filePath);
-        listener.getLogger().println("File: " + f.getRemote());
-        return f;
+    public static FilePath readFile(FilePath workspace, String filePath, TaskListener listener) {
+        /* Now we need to read from workspace or from absolute path
+         * We need to distinguish a relative path (from workspace base) of an absolute path:
+         *  -> How to know if it's an absolute path? If it stars by volume or slash it's an absolute path? do we have library to for this?
+         *     -> We can use java File.isAbsolute() or java Path.isAbsolute(): Will this work with regular expressions?
+         *  -> If its not an absolute path then we run the old path
+         */
+
+        /*final Path p = Paths.get(filePath);
+        if (p.isAbsolute()) {
+            FilePath f = new FilePath(filePath);
+            listener.getLogger().println("File: " + f.getRemote());
+            return f;
+            //TODO XRAYJENKINS-87
+
+            //TODO XRAYJENKINS-87 Unit Tests
+        } else {*/
+            FilePath f = new FilePath(workspace, filePath);
+            listener.getLogger().println("File: " + f.getRemote());
+            return f;
+        //}
     }
 
 
