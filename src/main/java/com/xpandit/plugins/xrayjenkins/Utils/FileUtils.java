@@ -130,12 +130,17 @@ public class FileUtils {
            /Users.list('/dmdu/Desktop/java-junit-calc/target/surefire-reports/*.xml', "", false)
          */
 
-        Path p = Paths.get(globExpression);
         FilePath base;
         String regexExpression = globExpression;
+
+        Path p = Paths.get(globExpression);
+        Path root = p.getRoot();
+        Path parent = p.getParent();
+        Path fileName = p.getFileName();
+
         if (p.isAbsolute()) {
-            base = new FilePath(p.getParent().toFile());
-            regexExpression = p.getFileName().toString();
+            base = new FilePath(root.toFile());
+            regexExpression = root.relativize(parent).resolve(fileName).toString();
         } else {
             base = workspace;
         }

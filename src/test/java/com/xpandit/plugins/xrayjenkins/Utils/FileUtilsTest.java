@@ -8,17 +8,21 @@
 package com.xpandit.plugins.xrayjenkins.Utils;
 
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.TaskListener;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
+
 import static org.mockito.Mockito.when;
-import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FileUtilsTest {
@@ -77,7 +81,23 @@ public class FileUtilsTest {
             prepareFolders();
             String resultsPath = getRelativeDirectoryPath() + "*.xml";
             List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
-            Assert.assertTrue(matchingFiles.size() == 8);
+            Assert.assertEquals(8, matchingFiles.size());
+        } catch (IOException | InterruptedException e){
+            Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
+        }
+        workspace.delete();
+    }
+
+    @Test
+    public void testGetFileWithAbsolutePath(){
+        try{
+            try(PrintStream logger = new PrintStream(workspace.newFile(LOGGER_NAME))){
+                when(taskListener.getLogger()).thenReturn(logger);
+            }
+            prepareFolders();
+            String resultsPath = getAbsoluteDirectoryPath() + "*.xml";
+            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+            Assert.assertEquals(8, matchingFiles.size());
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
         }
@@ -93,7 +113,7 @@ public class FileUtilsTest {
             prepareFolders();
             String resultsPath = getRelativeDirectoryPath() + "feb*.xml";
             List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
-            Assert.assertTrue(matchingFiles.size() == 2);
+            Assert.assertEquals(2, matchingFiles.size());
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
         }
@@ -112,7 +132,7 @@ public class FileUtilsTest {
                         taskListener).get(0).getName();
                 String resultsPath = getRelativeDirectoryPathWithNoFolderMatcher() + fileName;
                 List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
-                Assert.assertTrue(matchingFiles.size() == 1);
+                Assert.assertEquals(1, matchingFiles.size());
             }
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
@@ -120,7 +140,11 @@ public class FileUtilsTest {
 
     }
 
-
+    private String getAbsoluteDirectoryPath() {
+        return getWorkspacePath()
+                + File.separator
+                + getRelativeDirectoryPath();
+    }
 
     private String getRelativeDirectoryPath(){
         return UNITTESTING
@@ -146,7 +170,11 @@ public class FileUtilsTest {
 
 
     private File getWorkspaceFile(){
-        return new File(workspace.getRoot().toPath().toString() + getWorkSpaceSuffix());
+        return new File(getWorkspacePath());
+    }
+
+    private String getWorkspacePath() {
+        return workspace.getRoot().toPath().toString() + getWorkSpaceSuffix();
     }
 
     private String getWorkSpaceSuffix(){
