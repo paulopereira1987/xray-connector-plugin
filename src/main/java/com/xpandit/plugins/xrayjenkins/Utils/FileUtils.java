@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -143,11 +144,17 @@ public class FileUtils {
         Path path = Paths.get(globExpression);
 
         if (path.isAbsolute()) {
-            Path root = path.getRoot();
-            Path parent = path.getParent();
-            Path fileName = path.getFileName();
-            base = new FilePath(channel, root.toString());
-            regexExpression = root.relativize(parent).resolve(fileName).toString();
+            final String rootFilePath = Optional.ofNullable(path.getRoot())
+                    .map(Path::toString)
+                    .orElseThrow(() -> FileUtils.absoluteFilePathFailed(listener));
+
+            regexExpression = Optional.ofNullable(path.getRoot())
+                    .map(root -> root.relativize(path.getParent()))
+                    .map(relative -> relative.resolve(path.getFileName()))
+                    .map(Path::toString)
+                    .orElseThrow(() -> FileUtils.absoluteFilePathFailed(listener));
+
+            base = new FilePath(channel, rootFilePath);
         } else {
             base = workspace;
         }
@@ -165,6 +172,11 @@ public class FileUtils {
         filePaths.forEach(filePath -> listener.getLogger().println("File found: " + filePath.getRemote()));
 
         return filePaths;
+    }
+
+    private static XrayJenkinsGenericException absoluteFilePathFailed(TaskListener listener) {
+        listener.getLogger().println("Error getting absolute File Path");
+        return new XrayJenkinsGenericException("Error getting absolute File Path");
     }
 
     /**
