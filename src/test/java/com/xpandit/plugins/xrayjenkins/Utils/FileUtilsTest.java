@@ -80,7 +80,8 @@ public class FileUtilsTest {
             }
             prepareFolders();
             String resultsPath = getRelativeDirectoryPath() + "*.xml";
-            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener,
+                                                              null);
             Assert.assertEquals(8, matchingFiles.size());
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
@@ -96,7 +97,7 @@ public class FileUtilsTest {
             }
             prepareFolders();
             String resultsPath = getAbsoluteDirectoryPath() + "*.xml";
-            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener, null);
             Assert.assertEquals(8, matchingFiles.size());
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
@@ -112,7 +113,7 @@ public class FileUtilsTest {
             }
             prepareFolders();
             String resultsPath = getRelativeDirectoryPath() + "feb*.xml";
-            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener, null);
             Assert.assertEquals(2, matchingFiles.size());
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
@@ -128,7 +129,7 @@ public class FileUtilsTest {
             }
             prepareFolders();
             String resultsPath = getAbsoluteDirectoryPath() + "feb*.xml";
-            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+            List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener, null);
             Assert.assertEquals(2, matchingFiles.size());
         } catch (IOException | InterruptedException e){
             Assert.fail(EXCEPTION_MESSAGE + e.getMessage());
@@ -145,9 +146,9 @@ public class FileUtilsTest {
                 //we cannot guess the complete name as TemporaryFolder will add a random id to the names, so we are getting a valid file name
                 String fileName = FileUtils.getFiles(new FilePath(getWorkspaceFile()),
                         getRelativeDirectoryPathWithNoFolderMatcher() + "february*.xml",
-                        taskListener).get(0).getName();
+                        taskListener, null).get(0).getName();
                 String resultsPath = getRelativeDirectoryPathWithNoFolderMatcher() + fileName;
-                List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener);
+                List<FilePath> matchingFiles = FileUtils.getFiles(new FilePath(getWorkspaceFile()), resultsPath, taskListener, null);
                 Assert.assertEquals(1, matchingFiles.size());
             }
         } catch (IOException | InterruptedException e){

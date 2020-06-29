@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -125,7 +126,8 @@ public class FileUtils {
     public static List<FilePath> getFiles(
             FilePath workspace,
             String globExpression,
-            TaskListener listener
+            TaskListener listener,
+            VirtualChannel channel
     )
             throws IOException, InterruptedException {
         if (workspace == null) {
@@ -144,7 +146,7 @@ public class FileUtils {
             Path root = path.getRoot();
             Path parent = path.getParent();
             Path fileName = path.getFileName();
-            base = new FilePath(root.toFile());
+            base = new FilePath(channel, root.toString());
             regexExpression = root.relativize(parent).resolve(fileName).toString();
         } else {
             base = workspace;
