@@ -13,18 +13,16 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -141,20 +139,17 @@ public class FileUtils {
         FilePath base;
         String regexExpression = globExpression;
 
-        Path path = Paths.get(globExpression);
+        String root = FilenameUtils.getPrefix(globExpression);//Get the root of the glob expression
 
-        if (path.isAbsolute()) {
-            final String rootFilePath = Optional.ofNullable(path.getRoot())
-                    .map(Path::toString)
-                    .orElseThrow(() -> FileUtils.absoluteFilePathFailed(listener));
+        if (!StringUtils.isBlank(root)) {
+            //If there is a root then the path is absolute, the reg exp should be the path without the root
+            String path = FilenameUtils.getPath(globExpression);
+            String fileName = FilenameUtils.getName(globExpression);
 
-            regexExpression = Optional.ofNullable(path.getRoot())
-                    .map(root -> root.relativize(path.getParent()))
-                    .map(relative -> relative.resolve(path.getFileName()))
-                    .map(Path::toString)
-                    .orElseThrow(() -> FileUtils.absoluteFilePathFailed(listener));
+            regexExpression = FilenameUtils.concat(path, fileName);
 
-            base = new FilePath(channel, rootFilePath);
+            //The base will be the root. The reg exp will be evaluated here.
+            base = new FilePath(channel, root);
         } else {
             base = workspace;
         }
