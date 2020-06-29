@@ -169,11 +169,6 @@ public class FileUtils {
         return filePaths;
     }
 
-    private static XrayJenkinsGenericException absoluteFilePathFailed(TaskListener listener) {
-        listener.getLogger().println("Error getting absolute File Path");
-        return new XrayJenkinsGenericException("Error getting absolute File Path");
-    }
-
     /**
      * Given the Jenkins project workspace FilePath and the file path, will resolve the FilePath of the file
      *
