@@ -51,7 +51,7 @@
 		<f:entry title="{{label}}">
 			<select name="_.inputTestInfoSwitcher" class="setting-input"
 					id="selectTestInfoInputType_${descriptor.defaultBuildID()}"
-					onchange='switchTestInfoInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer${descriptor.defaultBuildID()}")'>
+					onchange='switchTestInfoInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer_${descriptor.defaultBuildID()}")'>
 				<option value='filePath'>${%import-parameter.content-type-filepath}</option>
 				<option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
 			</select>
