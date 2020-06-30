@@ -49,17 +49,15 @@
 	<j:file xmlns:j="jelly:core" var="addSwitchableTestField" omitXmlDeclaration='true' escapeText='false' trim='true'
 			outputMode='HTML'>
 		<f:entry title="{{label}}">
-			<!--<select name="_.inputInfoSwitcher" class="setting-input"
+			<select name="_.inputTestInfoSwitcher" class="setting-input"
 					id="selectTestInfoInputType_${descriptor.defaultBuildID()}"
 					onchange='switchInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer${descriptor.defaultBuildID()}")'>
 				<option value='filePath'>${%import-parameter.content-type-filepath}</option>
 				<option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
-			</select>-->
-            <div> TEST 2 </div>
+			</select>
 		</f:entry>
 		<f:entry>
 			<div id="switchTestInfoContainer_${descriptor.defaultBuildID()}">
-				<div> TEST 3 </div>
 				${addInput}
 			</div>
 		</f:entry>
@@ -100,9 +98,14 @@
 
 	  /*
 	   * Switches the HTML element for the importInfo field
+	   *
+	   * TODO this function only works for Test Execution info field, because:
+	   * 1 - It assumes select element has id = 'selectInputType_${descriptor.defaultBuildID()}'
+	   * 2 - lastSwitcherConfig gets the option selected for Test execution info field
+	   * 3 - On line 121 has hardcoded 'importInfo'
 	   */
 	  switchInput_${descriptor.defaultBuildID()} = function(container){
-
+		console.info("switching");
 	    //current selected input type, from the select HTML element
 	  	var selectedInputType = Q("#selectInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
 
@@ -137,6 +140,11 @@
 
 	  }
 
+	  /*
+	   *  TODO this only works for Test Execution Field:
+	   *  1 - lastSwitcherConfig will have the value for the Test Execution field
+	   *  2 - assumes the select element has id 'selectInputType_...'. This is true for Test Execution field
+	   */
 	  switcherLastConfiguration_${descriptor.defaultBuildID()} = function(){
 		//selected input type, from last configuration
 		var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
