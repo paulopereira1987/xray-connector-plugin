@@ -150,11 +150,16 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
 
-        processImport(run, workspace, client, listener, xrayInstance);
+        final UploadResult uploadResult = processImport(run, workspace, client, listener, xrayInstance);
 
+        listener.getLogger().println("Response: (" + uploadResult.getStatusCode() + ") " + uploadResult.getMessage());
+
+        if (uploadResult.isOkStatusCode()) {
+            listener.getLogger().println("Successfully imported Feature files");
+        }
     }
 
-    private void processImport(
+    private UploadResult processImport(
             final Run<?, ?> run,
             final FilePath workspace,
             final XrayTestImporter client,
@@ -186,6 +191,8 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
             // Deletes the Zip File
             deleteFile(zipFile, listener);
+
+            return uploadResult;
         } catch (XrayClientCoreGenericException e) {
             addFailedOpEnvironmentVariables(run, listener);
             listener.error(e.getMessage());
