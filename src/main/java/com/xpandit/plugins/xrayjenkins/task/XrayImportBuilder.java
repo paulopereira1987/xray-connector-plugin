@@ -485,7 +485,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         if (BuilderUtils.isGlobExpressionsSupported(endpointValue)) {
             ObjectMapper mapper = new ObjectMapper();
             String key = null;
-            for (FilePath fp : FileUtils.getFiles(workspace, resolved, listener)) {
+            for (FilePath fp : FileUtils.getFiles(workspace, resolved, listener, launcher.getChannel())) {
                 UploadResult result = uploadResults(workspace, listener, client, env, key, fp);
 
                 uploadResults.add(result);
