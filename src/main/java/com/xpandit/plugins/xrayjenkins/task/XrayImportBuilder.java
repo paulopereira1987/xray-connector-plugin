@@ -96,7 +96,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
     private static final String SAME_EXECUTION_CHECKBOX = "importToSameExecution";
     private static final String INPUT_INFO_SWITCHER = "inputInfoSwitcher";
-    private static final String TEST_INFO_INPUT_SWITCHER = "testInfoInputSwitcher";
+    private static final String TEST_INFO_INPUT_SWITCHER = "inputTestInfoSwitcher";
     private static final String SERVER_INSTANCE = "serverInstance";
     private static final String ERROR_LOG = "Error while performing import tasks";
     private static final String TEST_ENVIRONMENTS = "testEnvironments";
@@ -211,7 +211,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         this.importToSameExecution = importToSameExecution;
 
         /**
-         * Compatibility assigns - when creating the job, the config file must be prepared to run on pré-1.3.0 versiona
+         * Compatibility assigns - when creating the job, the config file must be prepared to run on pré-1.3.0 version
          */
         this.dynamicFields = getDynamicFieldsMap();
         this.xrayInstance = ConfigurationUtils.getConfiguration(serverInstance);
