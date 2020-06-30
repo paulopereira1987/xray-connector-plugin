@@ -51,7 +51,7 @@
 		<f:entry title="{{label}}">
 			<select name="_.inputTestInfoSwitcher" class="setting-input"
 					id="selectTestInfoInputType_${descriptor.defaultBuildID()}"
-					onchange='switchInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer${descriptor.defaultBuildID()}")'>
+					onchange='switchTestInfoInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer${descriptor.defaultBuildID()}")'>
 				<option value='filePath'>${%import-parameter.content-type-filepath}</option>
 				<option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
 			</select>
@@ -105,7 +105,6 @@
 	   * 3 - On line 121 has hardcoded 'importInfo'
 	   */
 	  switchInput_${descriptor.defaultBuildID()} = function(container){
-		console.info("switching");
 	    //current selected input type, from the select HTML element
 	  	var selectedInputType = Q("#selectInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
 
@@ -139,6 +138,42 @@
 		}
 
 	  }
+
+		switchTestInfoInput_${descriptor.defaultBuildID()} = function (container) {
+			//current selected input type, from the select HTML element
+			var selectTestInfoInputType = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
+
+			if (!selectTestInfoInputType)
+				return;
+
+			var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
+
+			//selected input type, from last configuration
+			var lastSwitcherConfig = '${instance.getTestInfoInputSwitcher()}';
+
+			//field to render
+			var _field = (formats[key]).configurableFields.filter(function (field) {
+				return field.key == 'testImportInfo'
+			})[0];
+			_field = JSON.parse(JSON.stringify(_field));
+
+			var renderConfiguration = (lastSwitcherConfig == selectTestInfoInputType);
+
+			if (!renderConfiguration)
+				_field.configuration = '';
+
+			if (selectTestInfoInputType == 'filePath') {// content is a file path
+				var template = Handlebars.compile('${addInput}');
+				var result = template(_field);
+				Q(container).html(result);
+			} else if (selectTestInfoInputType == 'fileContent') { // content is in JSON format
+				var template = Handlebars.compile('${addTextarea}');
+				var result = template(_field);
+				Q(container).html(result);
+				//prettify();
+			}
+
+		}
 
 	  /*
 	   *  TODO this only works for Test Execution Field:

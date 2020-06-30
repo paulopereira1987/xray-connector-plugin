@@ -96,6 +96,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
     private static final String SAME_EXECUTION_CHECKBOX = "importToSameExecution";
     private static final String INPUT_INFO_SWITCHER = "inputInfoSwitcher";
+    private static final String TEST_INFO_INPUT_SWITCHER = "testInfoInputSwitcher";
     private static final String SERVER_INSTANCE = "serverInstance";
     private static final String ERROR_LOG = "Error while performing import tasks";
     private static final String TEST_ENVIRONMENTS = "testEnvironments";
@@ -116,6 +117,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private String formatSuffix; //value of format select
     private String serverInstance;//Configuration ID of the Jira instance
     private String inputInfoSwitcher;//value of the input type switcher
+    private String testInfoInputSwitcher; // value of the test input switcher
     private String endpointName;
     private String projectKey;
     private String testEnvironments;
@@ -186,6 +188,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                              String revision,
                              String importInfo,
                              String inputInfoSwitcher,
+                             String testInfoInputSwitcher,
                              String importToSameExecution) {
         this.serverInstance = serverInstance;
         this.endpointName = endpointName;
@@ -200,6 +203,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         this.revision = revision;
         this.importInfo = importInfo;
         this.inputInfoSwitcher = inputInfoSwitcher;
+        this.testInfoInputSwitcher = testInfoInputSwitcher;
         this.importToSameExecution = importToSameExecution;
 
         /**
@@ -359,6 +363,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
     public String getInputInfoSwitcher() {
         return inputInfoSwitcher;
+    }
+
+    public String getTestInfoInputSwitcher() {
+        return testInfoInputSwitcher;
     }
 
     public void setInputInfoSwitcher(String inputInfoSwitcher) {
@@ -732,6 +740,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     fields.get(REVISION_FIELD),
                     fields.get(IMPORT_INFO),
                     fields.get(INPUT_INFO_SWITCHER),
+                    fields.get(TEST_INFO_INPUT_SWITCHER),
                     fields.get(SAME_EXECUTION_CHECKBOX));
         }
 
