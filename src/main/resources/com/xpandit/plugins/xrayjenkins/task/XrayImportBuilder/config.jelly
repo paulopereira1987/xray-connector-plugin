@@ -96,14 +96,6 @@
 	   		switcherLastConfiguration_${descriptor.defaultBuildID()}();
 		}
 
-	  /*
-	   * Switches the HTML element for the importInfo field
-	   *
-	   * TODO this function only works for Test Execution info field, because:
-	   * 1 - It assumes select element has id = 'selectInputType_${descriptor.defaultBuildID()}'
-	   * 2 - lastSwitcherConfig gets the option selected for Test execution info field
-	   * 3 - On line 121 has hardcoded 'importInfo'
-	   */
 	  switchInput_${descriptor.defaultBuildID()} = function(container){
 	    //current selected input type, from the select HTML element
 	  	var selectedInputType = Q("#selectInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
@@ -139,6 +131,7 @@
 
 	  }
 
+	  	//TODO XRAYJENKINS-88 This code was copied from the function above, it should be refactored
 		switchTestInfoInput_${descriptor.defaultBuildID()} = function (container) {
 			//current selected input type, from the select HTML element
 			var selectTestInfoInputType = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
@@ -176,7 +169,7 @@
 		}
 
 	  /*
-	   *  TODO this only works for Test Execution Field:
+	   *  TODO XRAYJENKINS-88 this only works for Test Execution Field:
 	   *  1 - lastSwitcherConfig will have the value for the Test Execution field
 	   *  2 - assumes the select element has id 'selectInputType_...'. This is true for Test Execution field
 	   */

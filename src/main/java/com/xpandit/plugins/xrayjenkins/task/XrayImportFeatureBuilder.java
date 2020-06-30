@@ -176,6 +176,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
             base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
 
+            // TODO XRAYJENKINS-88 Implement new multipart fields
             // Uploads the Zip file to the Jira instance
             UploadResult uploadResult = uploadZipFile(client, listener, zipFile);
 

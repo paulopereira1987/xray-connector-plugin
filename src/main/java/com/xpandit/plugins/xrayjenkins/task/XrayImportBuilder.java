@@ -633,6 +633,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
                 dataParams.put(com.xpandit.xray.model.DataParameter.INFO, info);
             }
+            // TODO XRAYJENKINS-88 Implement the same "if" block as before but for the "this.testImportInfo"
 
             listener.getLogger().println("Starting to import results from " + resultsFile.getName());
 
