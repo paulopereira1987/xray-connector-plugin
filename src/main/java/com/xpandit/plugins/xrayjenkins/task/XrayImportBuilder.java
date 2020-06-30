@@ -107,6 +107,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private static final String TEST_EXEC_KEY = "testExecKey";
     private static final String REVISION_FIELD = "revision";
     private static final String IMPORT_INFO = "importInfo";
+    private static final String TEST_IMPORT_INFO = "testImportInfo";
     private static final String FORMAT_SUFFIX = "formatSuffix";
     private static final String CLOUD_DOC_URL = "https://confluence.xpand-it.com/display/XRAYCLOUD/Import+Execution+Results+-+REST";
     private static final String SERVER_DOC_URL = "https://confluence.xpand-it.com/display/XRAY/Import+Execution+Results+-+REST";
@@ -117,7 +118,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private String formatSuffix; //value of format select
     private String serverInstance;//Configuration ID of the Jira instance
     private String inputInfoSwitcher;//value of the input type switcher
-    private String testInfoInputSwitcher; // value of the test input switcher
+    private String inputTestInfoSwitcher; // value of the test input switcher
     private String endpointName;
     private String projectKey;
     private String testEnvironments;
@@ -127,6 +128,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private String testExecKey;
     private String revision;
     private String importInfo;
+    private String testImportInfo;
     private String importToSameExecution;
 
 
@@ -187,8 +189,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                              String testExecKey,
                              String revision,
                              String importInfo,
+                             String testImportInfo,
                              String inputInfoSwitcher,
-                             String testInfoInputSwitcher,
+                             String inputTestInfoSwitcher,
                              String importToSameExecution) {
         this.serverInstance = serverInstance;
         this.endpointName = endpointName;
@@ -202,8 +205,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         this.testExecKey = testExecKey;
         this.revision = revision;
         this.importInfo = importInfo;
+        this.testImportInfo = testImportInfo;
         this.inputInfoSwitcher = inputInfoSwitcher;
-        this.testInfoInputSwitcher = testInfoInputSwitcher;
+        this.inputTestInfoSwitcher = inputTestInfoSwitcher;
         this.importToSameExecution = importToSameExecution;
 
         /**
@@ -225,6 +229,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         putNotBlank(fields, REVISION_FIELD, revision);
         putNotBlank(fields, IMPORT_INFO, importInfo);
         putNotBlank(fields, INPUT_INFO_SWITCHER, inputInfoSwitcher);
+        putNotBlank(fields, TEST_IMPORT_INFO, testImportInfo);
+        putNotBlank(fields, TEST_INFO_INPUT_SWITCHER, inputTestInfoSwitcher);
         return fields;
     }
 
@@ -365,8 +371,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         return inputInfoSwitcher;
     }
 
-    public String getTestInfoInputSwitcher() {
-        return testInfoInputSwitcher;
+    public String getInputTestInfoSwitcher() {
+        return inputTestInfoSwitcher;
     }
 
     public void setInputInfoSwitcher(String inputInfoSwitcher) {
@@ -707,6 +713,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         return BuildStepMonitor.NONE;
     }
 
+    public String getTestImportInfo() {
+        return testImportInfo;
+    }
+
+    public void setTestImportInfo(String testImportInfo) {
+        this.testImportInfo = testImportInfo;
+    }
+
 
     @Extension
     public static class Descriptor extends BuildStepDescriptor<Publisher> {
@@ -739,6 +753,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     fields.get(TEST_EXEC_KEY),
                     fields.get(REVISION_FIELD),
                     fields.get(IMPORT_INFO),
+                    fields.get(TEST_IMPORT_INFO),
                     fields.get(INPUT_INFO_SWITCHER),
                     fields.get(TEST_INFO_INPUT_SWITCHER),
                     fields.get(SAME_EXECUTION_CHECKBOX));
