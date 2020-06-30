@@ -4,11 +4,15 @@
 		{{#ifEquals key "importInfo"}}
 			{{>addSwitchableField}}
 		{{else}}
-			{{#ifEquals key "importToSameExecution"}}
-				{{>addSameExecutionCheckboxEntry}}
-			{{else}}
-				{{>addInputEntry}}
-			{{/ifEquals}}
+  			{{#ifEquals key "importTestInfo"}}
+  				{{>addSwitchableTestField}}
+            {{else}}
+				{{#ifEquals key "importToSameExecution"}}
+					{{>addSameExecutionCheckboxEntry}}
+				{{else}}
+					{{>addInputEntry}}
+				{{/ifEquals}}
+  			{{/ifEquals}}
 		{{/ifEquals}}
   {{/each}}
 

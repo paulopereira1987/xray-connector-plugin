@@ -45,6 +45,26 @@
   	 		</div>
   		</f:entry> 
   </j:file>
+
+	<j:file xmlns:j="jelly:core" var="addSwitchableTestField" omitXmlDeclaration='true' escapeText='false' trim='true'
+			outputMode='HTML'>
+		<f:entry title="{{label}}">
+			<!--<select name="_.inputInfoSwitcher" class="setting-input"
+					id="selectTestInfoInputType_${descriptor.defaultBuildID()}"
+					onchange='switchInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer${descriptor.defaultBuildID()}")'>
+				<option value='filePath'>${%import-parameter.content-type-filepath}</option>
+				<option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
+			</select>-->
+            <div> TEST 2 </div>
+		</f:entry>
+		<f:entry>
+			<div id="switchTestInfoContainer_${descriptor.defaultBuildID()}">
+				<div> TEST 3 </div>
+				${addInput}
+			</div>
+		</f:entry>
+	</j:file>
+
   <!--End of templates spec -->
 
   <script id="_${descriptor.defaultBuildID()}">
@@ -203,6 +223,8 @@
 				Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
 
 				Handlebars.registerPartial("addSwitchableField", '${addSwitchableField}');
+
+				 Handlebars.registerPartial("addSwitchableTestField", '${addSwitchableTestField}');
 
 				//get last chosen format
 				var formatSuffix = '${instance.getFormatSuffix()}';
