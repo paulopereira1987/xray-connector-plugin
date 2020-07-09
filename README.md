@@ -119,4 +119,4 @@ Task***, in order to import your Test Results in the following formats:
 
 Check out [Xray Test Management website](https://getxray.app?utm_source=jenkins-connector&utm_medium=github&utm_campaign=jenkins-connector) to understand how to leverage Jira for Test Management and [start a free trial](https://marketplace.atlassian.com/apps/1211769/xray-test-management-for-jira?utm_source=jenkins-connector&utm_medium=github&utm_campaign=jenkins-connector).
 
-If you need any help using in Xray or this plugin, you can contact us by using our [Support System](xraysupport.xpand-it.com/).
+If you need any help using in Xray or this plugin, you can contact us by using our [Support System](https://xraysupport.xpand-it.com/).

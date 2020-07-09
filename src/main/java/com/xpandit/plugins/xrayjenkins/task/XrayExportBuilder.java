@@ -141,7 +141,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
     public void perform(Run<?,?> build,
                         FilePath workspace,
                         Launcher launcher,
-                        TaskListener listener) throws AbortException, IOException, InterruptedException {
+                        TaskListener listener) throws IOException {
 
         XrayExportBuilderCompatibilityDelegate compatibilityDelegate = new XrayExportBuilderCompatibilityDelegate(this);
         compatibilityDelegate.applyCompatibility();

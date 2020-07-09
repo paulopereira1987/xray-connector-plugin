@@ -36,18 +36,21 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class is responsible for performing the Xray: Cucumber Features Import Task
@@ -147,11 +150,16 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
         }
 
-        processImport(run, workspace, client, listener, xrayInstance);
+        final UploadResult uploadResult = processImport(run, workspace, client, listener, xrayInstance);
 
+        listener.getLogger().println("Response: (" + uploadResult.getStatusCode() + ") " + uploadResult.getMessage());
+
+        if (uploadResult.isOkStatusCode()) {
+            listener.getLogger().println("Successfully imported Feature files");
+        }
     }
 
-    private void processImport(
+    private UploadResult processImport(
             final Run<?, ?> run,
             final FilePath workspace,
             final XrayTestImporter client,
@@ -159,11 +167,19 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             final XrayInstance instance) throws IOException, InterruptedException {
         
         try{
-            final Set<String> validFilePath = FileUtils.getFeatureFileNamesFromWorkspace(workspace, this.folderPath, listener);
+            final Set<String> validFilePaths = FileUtils.getFeatureFileNamesFromWorkspace(workspace, this.folderPath, listener);
             final FilePath zipFile = createZipFile(workspace);
-            
-            // Create Zip file in the workspace's root folder
-            workspace.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePath, lastModified));
+
+            Path path = Paths.get(this.folderPath);
+            FilePath base = workspace;
+            if (path.isAbsolute()) {
+                base = new FilePath(path.toFile());
+            }
+
+            validFilePaths.forEach(filePath -> listener.getLogger().println("File found: " + filePath));
+            listener.getLogger().println("Creating zip to import feature files. This may take a while if you have a big number of files.");
+
+            base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
 
             // Uploads the Zip file to the Jira instance
             UploadResult uploadResult = uploadZipFile(client, listener, zipFile);
@@ -175,6 +191,8 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
             // Deletes the Zip File
             deleteFile(zipFile, listener);
+
+            return uploadResult;
         } catch (XrayClientCoreGenericException e) {
             addFailedOpEnvironmentVariables(run, listener);
             listener.error(e.getMessage());
