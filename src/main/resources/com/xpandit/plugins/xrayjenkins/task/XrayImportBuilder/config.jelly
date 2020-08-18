@@ -247,14 +247,13 @@
 
    <f:entry title="${%Format}" field="formatSuffix">
    		<f:select id="selectFormat_${descriptor.defaultBuildID()}"/>
-
-   		<f:section name="dynamicFields">
-   			<f:entry title="Parameters">
-   				<p id="configurableFields_${descriptor.defaultBuildID()}" style="border-left:solid;border-color:#00a3ac;width:50vw"></p>
-   			</f:entry>
-   		</f:section>
-
    </f:entry>
+
+	<f:section name="dynamicFields">
+		<f:entry title="Parameters">
+			<p id="configurableFields_${descriptor.defaultBuildID()}" style="border-left:solid;border-color:#00a3ac;width:50vw"></p>
+		</f:entry>
+	</f:section>
 
    <f:entry>
 	   <a id="xray-doc-link_${descriptor.defaultBuildID()}" target="_blank">Click here for more details</a>
