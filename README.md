@@ -14,8 +14,8 @@ Xray is the leading Quality Assurance and Test Management app for Jira. More tha
 
 The guide below it's a "Quick Start" version of our full documentation available in Xray official page:
 
--   Xray Cloud integration with Jenkins: <https://confluence.xpand-it.com/display/XRAYCLOUD/Using+the+Xray+plugin+-+Jenkins>
--   Xray Server/DC integration with Jenkins: <https://confluence.xpand-it.com/display/public/XRAY/Integration+with+Jenkins>
+-   Xray Cloud integration with Jenkins: <https://docs.getxray.app/display/XRAYCLOUD/Integration+with+Jenkins>
+-   Xray Server/DC integration with Jenkins: <https://docs.getxray.app/display/XRAY/Integration+with+Jenkins>
 
 You can also check the source code of the plugin here: <https://github.com/jenkinsci/xray-connector-plugin>
   
@@ -80,7 +80,7 @@ The ***Xray: Cucumber Features Export Task*** and the ***Xray: Cucumber
 Features Import Task***
 
 Both tasks can be used while executing Cucumber tests: In a
-typical [Cucumber Workflow](https://confluence.xpand-it.com/pages/releaseview.action?pageId=46858243),
+typical [Cucumber Workflow](https://docs.getxray.app/display/XRAY/Integration+with+Jenkins#IntegrationwithJenkins-Cucumber(%22standard%22workflow)),
 after having created a Cucumber project and the Cucumber tests specified
 in Jira, you may want to have a project that **exports** the features
 from Jira, executes the automated tests on a CI environment and then
