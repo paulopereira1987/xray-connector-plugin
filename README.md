@@ -29,7 +29,7 @@ You can also check the source code of the plugin here: <https://github.com/jenki
 
 ### Requirements
 
--   Jenkins 2.60.3 or above
+-   Jenkins 2.138.4 or above
 -   At least one Jira instance (Server, Data Center and/or Cloud) with
     the
     [Xray](https://marketplace.atlassian.com/apps/1211769/xray-test-management-for-jira)
