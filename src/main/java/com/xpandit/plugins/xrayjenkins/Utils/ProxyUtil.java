@@ -58,7 +58,7 @@ public class ProxyUtil {
 
     private static Pattern makeUrlPattern(String noProxyHostElement) {
         final String regexp;
-        if (noProxyHostElement.indexOf("://") >= 0) {
+        if (noProxyHostElement.contains("://")) {
             // looks like an URL pattern; it's not supported in Jenkins in general, but it was in previous versions
             // of this plugin (2.3.0, 2.3.1), so let's keep that unchanged in case someone ever used it successfuly...
             regexp = noProxyHostElement.replace(".", "\\.").replace("*", ".*");
