@@ -16,7 +16,7 @@ public class CredentialResolver {
     private String username = null;
     private Secret password = null;
     
-    CredentialResolver(final String credentialId, final Run<?, ?> run) {
+    public CredentialResolver(final String credentialId, final Run<?, ?> run) {
         this.credentialId = credentialId;
         this.run = run;
     }

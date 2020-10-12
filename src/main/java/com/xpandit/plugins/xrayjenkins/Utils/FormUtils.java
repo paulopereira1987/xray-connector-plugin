@@ -12,6 +12,8 @@ import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import hudson.util.ListBoxModel;
+import org.apache.commons.collections.CollectionUtils;
+
 import java.util.List;
 
 public class FormUtils {
@@ -24,9 +26,10 @@ public class FormUtils {
     public static ListBoxModel getServerInstanceItems(){
         ListBoxModel items = new ListBoxModel();
         List<XrayInstance> serverInstances =  ServerConfiguration.get().getServerInstances();
-        if(serverInstances == null){
+        if(CollectionUtils.isEmpty(serverInstances)) {
             return items;
         }
+
         for(XrayInstance sc : serverInstances){
             HostingType instanceHostingType = sc.getHosting();
 

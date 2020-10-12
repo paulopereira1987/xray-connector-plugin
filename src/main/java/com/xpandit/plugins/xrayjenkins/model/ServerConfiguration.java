@@ -38,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
 
 @Extension
 public class ServerConfiguration extends GlobalConfiguration {
@@ -83,15 +85,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 	}
 
     public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
-        
-        final StandardListBoxModel result = new StandardListBoxModel();
-
-        final List<StandardUsernamePasswordCredentials> credentials = getAllCredentials(item);
-
-        for (StandardUsernamePasswordCredentials credential : credentials) {
-            result.with(credential);
-        }
-        return result.includeCurrentValue(credentialId);
+        return getAllCredentialsListBoxModel(item, credentialId);
     }
 
     public FormValidation doCheckCredentialId(
@@ -106,7 +100,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         }
             
         if (StringUtils.isBlank(value)) {
-            return FormValidation.error("Authentication not filled!");
+            return FormValidation.warning("Not filling the Credentials is not required, but you will have to fill the in each Build Task.");
         }
         
         if (!credentialExists(item, value)) {
@@ -122,7 +116,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         if (StringUtils.isBlank(credentialId)) {
-            return FormValidation.error("Authentication not filled!");
+            return FormValidation.error("Authentication is Optional, however, is required in order to test the connection.");
         }
 
         if (StringUtils.isBlank(hosting)) {
@@ -172,19 +166,6 @@ public class ServerConfiguration extends GlobalConfiguration {
                 instance.setHosting(HostingType.getDefaultType());
             }
         }
-    }
-
-    private List<StandardUsernamePasswordCredentials> getAllCredentials(@Nullable final Item item) {
-        final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
-                StandardUsernamePasswordCredentials.class,
-                item,
-                ACL.SYSTEM,
-                Collections.<DomainRequirement>emptyList());
-        
-        if (CollectionUtils.isEmpty(credentials)) {
-            return Collections.emptyList();
-        }
-        return credentials;
     }
     
     @Nullable

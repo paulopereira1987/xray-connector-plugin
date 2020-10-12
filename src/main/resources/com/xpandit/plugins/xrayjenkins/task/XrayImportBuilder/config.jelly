@@ -1,7 +1,6 @@
 
 <?jelly escape-by-default='false'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
-         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:c="/lib/credentials" xmlns:f="/lib/form">
          
   <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>         
   
@@ -243,6 +242,10 @@
 </script>
 	<f:entry title="${%Jira Instance}" field="serverInstance">
    		<f:select id="selectInstance_${descriptor.defaultBuildID()}"/>
+	</f:entry>
+
+	<f:entry title="${%Credentials}" field="credentialId">
+		<c:select expressionAllowed="false" default="${descriptor.credentialId}"/>
 	</f:entry>
 
    <f:entry title="${%Format}" field="formatSuffix">

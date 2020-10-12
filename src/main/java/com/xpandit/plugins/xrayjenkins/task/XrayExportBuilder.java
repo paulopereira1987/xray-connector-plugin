@@ -12,6 +12,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayExportBuilderCompatibilityDelegate;
@@ -20,11 +21,15 @@ import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import hudson.EnvVars;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import hudson.model.Item;
 import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -51,6 +56,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
 
 /**
@@ -94,6 +101,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
     private String issues;
     private String filter;
     private String filePath;
+    private String credentialId;
 
     /**
      * Constructor used in pipelines projects
@@ -110,7 +118,8 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
 	public XrayExportBuilder(String serverInstance,
                              String issues,
                              String filter,
-                             String filePath){
+                             String filePath,
+                             String credentialId){
         this.issues = issues;
         this.filter = filter;
         this.filePath = filePath;
@@ -151,9 +160,9 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         listener.getLogger().println("##########################################################");
         listener.getLogger().println("####   Xray is exporting the feature files  ####");
         listener.getLogger().println("##########################################################");
-        XrayInstance serverInstance = getConfiguration(this.serverInstance);
+        XrayInstance xrayInstance = getConfiguration(this.serverInstance);
 
-        if(serverInstance == null){
+        if(xrayInstance == null){
             listener.getLogger().println("XrayInstance is null. please check the passed configuration ID");
 
             XrayEnvironmentVariableSetter
@@ -162,18 +171,21 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             throw new AbortException("The Jira server configuration of this task was not found.");
         }
 
+        final CredentialResolver credentialResolver = xrayInstance
+                .getCredential(build)
+                .orElseGet(() -> new CredentialResolver(this.credentialId, build));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         XrayExporter client;
 
-        if (serverInstance.getHosting() == HostingType.CLOUD) {
-            client = new XrayExporterCloudImpl(serverInstance.getCredential(build).getUsername(),
-                    serverInstance.getCredential(build).getPassword(),
-                    proxyBean);
-        } else if (serverInstance.getHosting() == null || serverInstance.getHosting() == HostingType.SERVER) {
-            client = new XrayExporterImpl(serverInstance.getServerAddress(),
-                    serverInstance.getCredential(build).getUsername(),
-                    serverInstance.getCredential(build).getPassword(),
-                    proxyBean);
+        if (xrayInstance.getHosting() == HostingType.CLOUD) {
+            client = new XrayExporterCloudImpl(credentialResolver.getUsername(),
+                                               credentialResolver.getPassword(),
+                                               proxyBean);
+        } else if (xrayInstance.getHosting() == null || xrayInstance.getHosting() == HostingType.SERVER) {
+            client = new XrayExporterImpl(xrayInstance.getServerAddress(),
+                                          credentialResolver.getUsername(),
+                                          credentialResolver.getPassword(),
+                                          proxyBean);
         } else {
             XrayEnvironmentVariableSetter
                     .failed("Hosting type not recognized.")
@@ -269,6 +281,14 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
 		this.filePath = filePath;
 	}
 
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
     public XrayInstance getXrayInstance() {
         return xrayInstance;
     }
@@ -310,7 +330,8 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             return new XrayExportBuilder(formData.getString("serverInstance"),
                     fields.get("issues"),
                     fields.get("filter"),
-                    fields.get("filePath"));
+                    fields.get("filePath"),
+                    fields.get("credentialId"));
 			
         }
 
@@ -325,12 +346,13 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         	return FormUtils.getServerInstanceItems();
         }
 
+        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
+            return getUserScopedCredentialsListBoxModel(item, credentialId);
+        }
+
         private Map<String, String> getFields(JSONObject configuredFields) {
-        	Map<String,String> fields = new HashMap<String,String>();
-        	
-        	Set<String> keys = configuredFields.keySet();
-        	
-        	for(String key : keys){
+        	Map<String,String> fields = new HashMap<>();
+        	for(String key : (Set<String>) configuredFields.keySet()){
         		if(configuredFields.containsKey(key)){
         			String value = configuredFields.getString(key);
 					if(StringUtils.isNotBlank(value))
@@ -338,7 +360,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         		}
         	}
         	
-        	return fields;
+        	return Collections.unmodifiableMap(fields);
 		}
 		
 		@Override
