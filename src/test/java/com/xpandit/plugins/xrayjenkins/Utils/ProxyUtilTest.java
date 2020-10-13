@@ -48,7 +48,6 @@ public class ProxyUtilTest {
         PowerMockito.mockStatic(ProxyConfiguration.class);
 
         Whitebox.setInternalState(jenkins, "proxy", proxyConfiguration);
-        Whitebox.setInternalState(jenkins, "proxy", proxyConfiguration);
 
         when(ProxyConfiguration.load()).thenReturn(proxyConfiguration);
         when(Jenkins.getInstanceOrNull()).thenReturn(jenkins);
