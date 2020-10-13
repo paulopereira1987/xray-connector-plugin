@@ -1,6 +1,5 @@
 package com.xpandit.plugins.xrayjenkins.Utils;
 
-import com.xpandit.xray.service.impl.XrayClientImpl;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
@@ -26,13 +25,12 @@ import static org.mockito.Mockito.when;
 @PowerMockIgnore({"javax.net.ssl.*", "javax.management.*"})
 public class ProxyUtilTest {
 
-    private static final String PROXY_HOSTNAME = "whatever";
+    private static final String PROXY_DOMAIN = "proxydomain.com";
     private static final int PROXY_PORT = 8080;
-    private static final String JIRA_DOMAIN = "localhost";
-    private static final int JIRA_PORT = 8084;
-    private static final String JIRA_HTTP_URL = "http://" + JIRA_DOMAIN + ":" + JIRA_PORT;
-    private static final String JIRA_USERNAME = "admin";
-    private static final String JIRA_PASSWORD = "admin";
+    private static final String JIRA_DOMAIN = "jiradomain.com";
+    private static final int JIRA_PORT = 8080;
+    private static final String JIRA_HTTP_URL = "http://" + JIRA_DOMAIN;
+    private static final String JIRA_HTTP_URL_WITH_PORT = "http://" + JIRA_DOMAIN + ":" + JIRA_PORT;
 
     @Mock
     private Jenkins jenkins;
@@ -40,7 +38,7 @@ public class ProxyUtilTest {
     @Mock
     private ProxyConfiguration proxyConfiguration;
 
-    private XrayClientImpl xrayClient;
+    private HttpRequestProvider.ProxyBean proxyBean;
 
     @Before
     public void setup() throws IOException {
@@ -63,68 +61,70 @@ public class ProxyUtilTest {
     }
 
     private void createProxyBeanAndXrayClient() {
-        final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
+        proxyBean = ProxyUtil.createProxyBean();
         assertNotNull(proxyBean);
-
-        xrayClient = new XrayClientImpl(JIRA_HTTP_URL,
-                                        JIRA_USERNAME,
-                                        JIRA_PASSWORD,
-                                        proxyBean);
     }
 
     @Test
-    public void testCreateProxyWithProxy_success() {
-        setProxyConfiguration(JIRA_DOMAIN, JIRA_PORT);
+    public void testCreateProxyWithProxy() {
+        setProxyConfiguration(PROXY_DOMAIN, PROXY_PORT);
+
         createProxyBeanAndXrayClient();
-
-        assertTrue(xrayClient.testConnection().isSuccessful());
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL));
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL_WITH_PORT));
     }
 
     @Test
-    public void testCreateProxyWithProxy_failure() {
-        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
-        createProxyBeanAndXrayClient();
-
-        assertFalse(xrayClient.testConnection().isSuccessful());
-    }
-
-    @Test
-    public void testCreateProxyWithProxyAndNoProxyHost_success() {
-        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
+    public void testCreateProxyWithProxyAndNoProxyHost() {
+        setProxyConfiguration(PROXY_DOMAIN, PROXY_PORT);
         setNoProxyHost(JIRA_DOMAIN);
 
         createProxyBeanAndXrayClient();
-        assertTrue(xrayClient.testConnection().isSuccessful());
+        assertFalse(proxyBean.useProxy(JIRA_HTTP_URL));
+        assertFalse(proxyBean.useProxy(JIRA_HTTP_URL_WITH_PORT));
     }
 
     @Test
-    public void testCreateProxyWithProxyAndNoProxyHosts_success() {
-        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
-        setNoProxyHost("host1 \n" +
-                       "host2 \n" +
-                       "host3 \n" +
+    public void testCreateProxyWithProxyAndNoProxyHostAndPort() {
+        setProxyConfiguration(PROXY_DOMAIN, PROXY_PORT);
+        setNoProxyHost(JIRA_DOMAIN + ":" + JIRA_PORT);
+
+        createProxyBeanAndXrayClient();
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL));
+        assertFalse(proxyBean.useProxy(JIRA_HTTP_URL_WITH_PORT));
+    }
+
+    @Test
+    public void testCreateProxyWithProxyAndNoProxyHosts() {
+        setProxyConfiguration(PROXY_DOMAIN, PROXY_PORT);
+        setNoProxyHost("host1.com \n" +
+                       "host2.com \n" +
+                       "host3.com \n" +
                        JIRA_DOMAIN);
 
         createProxyBeanAndXrayClient();
-        assertTrue(xrayClient.testConnection().isSuccessful());
+        assertFalse(proxyBean.useProxy(JIRA_HTTP_URL));
+        assertFalse(proxyBean.useProxy(JIRA_HTTP_URL_WITH_PORT));
     }
 
     @Test
-    public void testCreateProxyWithProxyAndNoProxyHost_failure() {
-        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
+    public void testCreateProxyWithProxyAndRandomNoProxyHost() {
+        setProxyConfiguration(PROXY_DOMAIN, PROXY_PORT);
         setNoProxyHost("host1");
 
         createProxyBeanAndXrayClient();
-        assertFalse(xrayClient.testConnection().isSuccessful());
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL));
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL_WITH_PORT));
     }
 
     @Test
-    public void testCreateProxyWithProxyAndNoProxyHostAndPort_failure() {
-        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
-        setNoProxyHost("http://" + JIRA_DOMAIN + ":" + (JIRA_PORT + 1));
+    public void testCreateProxyWithProxyAndWrongPortNoProxyHost() {
+        setProxyConfiguration(PROXY_DOMAIN, PROXY_PORT);
+        setNoProxyHost(JIRA_HTTP_URL + ":" + (JIRA_PORT + 1));
 
         createProxyBeanAndXrayClient();
-        assertFalse(xrayClient.testConnection().isSuccessful());
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL));
+        assertTrue(proxyBean.useProxy(JIRA_HTTP_URL_WITH_PORT));
     }
 
 }
