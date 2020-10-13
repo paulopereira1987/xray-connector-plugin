@@ -72,6 +72,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllUserScopedCredentials;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
@@ -816,6 +817,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item,
                                                     @org.kohsuke.stapler.QueryParameter String credentialId) {
             return getUserScopedCredentialsListBoxModel(item, credentialId);
+        }
+
+        public FormValidation doCheckCredentialId(@org.kohsuke.stapler.QueryParameter String value, @org.kohsuke.stapler.QueryParameter String serverInstance) {
+            final XrayInstance xrayInstance = getConfiguration(serverInstance);
+            if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
+                return FormValidation.error("This XrayInstance requires an User scoped credential.");
+            }
+            return FormValidation.ok();
         }
 
         public long defaultBuildID() {

@@ -163,18 +163,25 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         listener.getLogger().println("##########################################################");
         XrayInstance xrayInstance = getConfiguration(this.serverInstance);
 
-        if(xrayInstance == null){
+        if (xrayInstance == null){
             listener.getLogger().println("XrayInstance is null. please check the passed configuration ID");
 
             XrayEnvironmentVariableSetter
                     .failed("XrayInstance is null. please check the passed configuration ID")
                     .setAction(build, listener);
             throw new AbortException("The Jira server configuration of this task was not found.");
+        } else if (StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(credentialId)) {
+            listener.getLogger().println("This XrayInstance requires an User scoped credential.");
+
+            XrayEnvironmentVariableSetter
+                    .failed("This XrayInstance requires an User scoped credential.")
+                    .setAction(build, listener);
+            throw new AbortException("This XrayInstance requires an User scoped credential.");
         }
 
         final CredentialResolver credentialResolver = xrayInstance
                 .getCredential(build)
-                .orElseGet(() -> new CredentialResolver(this.credentialId, build));
+                .orElseGet(() -> new CredentialResolver(credentialId, build));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         XrayExporter client;
 
@@ -418,6 +425,13 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             return ConfigurationUtils.anyAvailableConfiguration() ? FormValidation.ok() : FormValidation.error("No configured Server Instances found");
         }
 
+        public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {
+            final XrayInstance xrayInstance = getConfiguration(serverInstance);
+            if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
+                return FormValidation.error("This XrayInstance requires an User scoped credential.");
+            }
+            return FormValidation.ok();
+        }
         
         public List<XrayInstance> getServerInstances() {
 			return ServerConfiguration.get().getServerInstances();

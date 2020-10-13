@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
@@ -318,6 +319,14 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             } catch (NumberFormatException e){
                 return FormValidation.error("The value must be a positive integer");
             }
+        }
+
+        public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {
+            final XrayInstance xrayInstance = getConfiguration(serverInstance);
+            if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
+                return FormValidation.error("This XrayInstance requires an User scoped credential.");
+            }
+            return FormValidation.ok();
         }
 
         public String getUuid() {
