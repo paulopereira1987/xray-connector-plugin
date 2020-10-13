@@ -9,9 +9,7 @@ package com.xpandit.plugins.xrayjenkins.model;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.xray.service.impl.XrayClientImpl;
 import com.xpandit.xray.service.impl.XrayCloudClientImpl;
@@ -19,23 +17,21 @@ import com.xpandit.xray.service.impl.bean.ConnectionResult;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import hudson.Extension;
 import hudson.model.Item;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.Nullable;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;

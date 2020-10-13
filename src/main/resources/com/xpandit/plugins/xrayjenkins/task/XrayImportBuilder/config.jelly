@@ -1,6 +1,6 @@
 
 <?jelly escape-by-default='false'?>
-<j:jelly xmlns:j="jelly:core" xmlns:c="/lib/credentials" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
          
   <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>         
   
@@ -178,6 +178,23 @@
 		  }
 	  };
 
+	  toggleCredentials_${descriptor.defaultBuildID()} = function (changeEvent) {
+	      const isUserAuthJiraInstance = changeEvent &amp;&amp;
+											changeEvent.target &amp;&amp;
+											Q(changeEvent.target)
+													.find('option:selected')
+													.text()
+													.indexOf("[User Auth required] ") === 0;
+	      const $selectParent = Q('#credentialId_${descriptor.defaultBuildID()}')
+					.parent()
+					.parent();
+		  if (isUserAuthJiraInstance) {
+			  $selectParent.show();
+		  } else {
+			  $selectParent.hide();
+		  }
+	  };
+
 	  Q(document).ready(function() {
 	  		// Main template loading. It's syntax conflicts with Jelly so we need to load it asynchronously from an external source
 			Q.ajax({
@@ -214,12 +231,14 @@
 				}
 
 				changeDocLink_${descriptor.defaultBuildID()}();
+				toggleCredentials_${descriptor.defaultBuildID()}();
 
 				//register event-handler
 				Q('#selectInstance_${descriptor.defaultBuildID()}').on('change',function(e){
 				       //whenever we select an instance we need to filter the format options and change the doc link
                        filterFormats_${descriptor.defaultBuildID()}();
                        changeDocLink_${descriptor.defaultBuildID()}();
+                       toggleCredentials_${descriptor.defaultBuildID()}(e);
                 });
 
                 Q('#selectFormat_${descriptor.defaultBuildID()}').on('change',function(e){
@@ -245,7 +264,7 @@
 	</f:entry>
 
 	<f:entry title="${%Credentials}" field="credentialId">
-		<c:select expressionAllowed="false" default="${descriptor.credentialId}"/>
+		<f:select id="credentialId_${descriptor.defaultBuildID()}"/>
 	</f:entry>
 
    <f:entry title="${%Format}" field="formatSuffix">

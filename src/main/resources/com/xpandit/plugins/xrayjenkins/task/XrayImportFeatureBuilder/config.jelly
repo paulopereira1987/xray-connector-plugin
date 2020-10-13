@@ -1,24 +1,60 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:c="/lib/credentials" xmlns:f="/lib/form">
+<div id="xray_importFeatures_${descriptor.getUuid()}" class="import-features-wrapper">
+    <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
-    <f:entry title="${%Jira Instance}" field="serverInstance">
-        <f:select/>
-    </f:entry>
+            <f:entry title="${%Jira Instance}" field="serverInstance">
+                <f:select id="importCucumber_selectInstance_${descriptor.defaultBuildID()}" />
+            </f:entry>
 
-    <f:entry title="${%Credentials}" field="credentialId">
-        <c:select expressionAllowed="false"/>
-    </f:entry>
+            <f:entry title="${%Credentials}" field="credentialId">
+                <f:select id="importCucumber_credentialId_${descriptor.defaultBuildID()}" />
+            </f:entry>
 
-    <f:entry title="${%Project Key}" field="projectKey">
-        <f:textbox/>
-    </f:entry>
+            <f:entry title="${%Project Key}" field="projectKey">
+                <f:textbox/>
+            </f:entry>
 
-    <f:entry title="${%Cucumber feature files directory}" field="folderPath">
-        <f:textbox/>
-    </f:entry>
+            <f:entry title="${%Cucumber feature files directory}" field="folderPath">
+                <f:textbox/>
+            </f:entry>
 
-    <f:entry title="${%Modified in the last hours}" field="lastModified">
-        <f:textbox/>
-    </f:entry>
+            <f:entry title="${%Modified in the last hours}" field="lastModified">
+                <f:textbox/>
+            </f:entry>
 
-</j:jelly>
+        <script type="text/javascript">
+            (function(Q) {
+                const wrapperID = Q(".import-features-wrapper").attr("id");
+                Q(".import-features-wrapper")
+                        .removeClass("import-features-wrapper");
+
+                function toggleCredentials(changeEvent) {
+                    const isUserAuthJiraInstance = changeEvent &amp;&amp;
+                            changeEvent.target &amp;&amp;
+                            Q(changeEvent.target)
+                                    .find('option:selected')
+                                    .text()
+                                    .indexOf("[User Auth required] ") === 0;
+
+                    const $selectParent = Q("#" + wrapperID)
+                            .parent()
+                            .find('#importCucumber_credentialId_${descriptor.defaultBuildID()}')
+                            .parent()
+                            .parent();
+                    if (isUserAuthJiraInstance) {
+                        $selectParent.show();
+                    } else {
+                        $selectParent.hide();
+                    }
+                }
+
+                toggleCredentials();
+                Q("#" + wrapperID)
+                        .parent()
+                        .find("#importCucumber_selectInstance_${descriptor.defaultBuildID()}")
+                        .change(toggleCredentials);
+            })(jQuery);
+        </script>
+
+    </j:jelly>
+</div>

@@ -56,6 +56,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
@@ -269,6 +270,11 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     public static class Descriptor extends BuildStepDescriptor<Builder> {
 
         @Override
+        public synchronized void load() {
+            super.load();
+        }
+
+        @Override
         @Nonnull
         public String getDisplayName() {
             return "Xray: Cucumber Features Import Task";
@@ -314,5 +320,8 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             }
         }
 
+        public String getUuid() {
+            return UUID.randomUUID().toString();
+        }
     }
 }

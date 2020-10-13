@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import hudson.model.Item;
 import org.apache.commons.lang3.StringUtils;
@@ -314,6 +315,11 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         	super(XrayExportBuilder.class);
             load();
         }
+
+        @Override
+        public synchronized void load() {
+            super.load();
+        }
         
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
@@ -416,7 +422,10 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         public List<XrayInstance> getServerInstances() {
 			return ServerConfiguration.get().getServerInstances();
 		}
-        
+
+		public String getUuid() {
+            return UUID.randomUUID().toString();
+        }
     }
 
 }

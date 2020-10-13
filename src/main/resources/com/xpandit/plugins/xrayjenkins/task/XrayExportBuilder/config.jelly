@@ -1,28 +1,62 @@
 <?jelly escape-by-default='false'?>
-<j:jelly xmlns:j="jelly:core" xmlns:c="/lib/credentials" xmlns:f="/lib/form">
-   
-  <f:entry title="${%Jira Instance}" field="serverInstance">
-   		<f:select/>
-   </f:entry>
+<div id="xray_exportFeatures_${descriptor.getUuid()}" class="export-features-wrapper">
+	<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+			<f:entry title="${%Jira Instance}" field="serverInstance">
+				<f:select id="exportCucumber_selectInstance_${descriptor.defaultBuildID()}" />
+			</f:entry>
 
-	<f:entry title="${%Credentials}" field="credentialId">
-		<c:select expressionAllowed="false" default="${descriptor.credentialId}"/>
-	</f:entry>
+			<f:entry title="${%Credentials}" field="credentialId">
+				<f:select id="exportCucumber_credentialId_${descriptor.defaultBuildID()}" />
+			</f:entry>
 
-  <f:section name="fields"> 
-	   <f:entry title="${%Issues:}" field="issues">
-	        <f:textbox field="issues"/>
-	   </f:entry>
-	   <f:entry title="${%Filter:}" field="filter">
-	        <f:textbox field="filter"/>
-	   </f:entry>
-	   <f:entry title="${%File Path:}" field="filePath">
-	        <f:textbox field="filePath"/>
-	   </f:entry>
-   </f:section>
-   
-   <f:entry>
-   	 	<a href="http://confluence.xpand-addons.com/display/XRAY/Exporting+Cucumber+Tests+-+REST">Click here for more details</a>
-   </f:entry>
-   
-</j:jelly>
+			<f:section name="fields">
+			   <f:entry title="${%Issues:}" field="issues">
+					<f:textbox field="issues"/>
+			   </f:entry>
+			   <f:entry title="${%Filter:}" field="filter">
+					<f:textbox field="filter"/>
+			   </f:entry>
+			   <f:entry title="${%File Path:}" field="filePath">
+					<f:textbox field="filePath"/>
+			   </f:entry>
+			</f:section>
+
+			<f:entry>
+				<a href="http://confluence.xpand-addons.com/display/XRAY/Exporting+Cucumber+Tests+-+REST">Click here for more details</a>
+			</f:entry>
+		<script type="text/javascript">
+			(function(Q) {
+				const wrapperID = Q(".export-features-wrapper").attr("id");
+				Q(".export-features-wrapper")
+						.removeClass("export-features-wrapper");
+
+				function toggleCredentials(changeEvent) {
+					const isUserAuthJiraInstance = changeEvent &amp;&amp;
+							changeEvent.target &amp;&amp;
+							Q(changeEvent.target)
+									.find('option:selected')
+									.text()
+									.indexOf("[User Auth required] ") === 0;
+
+					const $selectParent = Q("#" + wrapperID)
+							.parent()
+							.find('#exportCucumber_credentialId_${descriptor.defaultBuildID()}')
+							.parent()
+							.parent();
+					if (isUserAuthJiraInstance) {
+						$selectParent.show();
+					} else {
+						$selectParent.hide();
+					}
+				}
+
+				toggleCredentials();
+				Q("#" + wrapperID)
+						.parent()
+						.find("#exportCucumber_selectInstance_${descriptor.defaultBuildID()}")
+						.change(toggleCredentials);
+			})(jQuery);
+		</script>
+
+	</j:jelly>
+</div>
