@@ -159,6 +159,14 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             addFailedOpEnvironmentVariables(run, "You must provide the directory path", listener);
             throw new AbortException();
         }
+        if (StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(credentialId)) {
+            listener.getLogger().println("This XrayInstance requires an User scoped credential.");
+
+            XrayEnvironmentVariableSetter
+                    .failed("This XrayInstance requires an User scoped credential.")
+                    .setAction(run, listener);
+            throw new AbortException("This XrayInstance requires an User scoped credential.");
+        }
 
         final CredentialResolver credentialResolver = xrayInstance
                 .getCredential(run)

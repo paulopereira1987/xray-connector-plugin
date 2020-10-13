@@ -475,6 +475,13 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     .failed("The Jira server configuration of this task was not found.")
                     .setAction(build, listener);
             throw new AbortException("The Jira server configuration of this task was not found.");
+        } else if (StringUtils.isBlank(importInstance.getCredentialId()) && StringUtils.isBlank(credentialId)) {
+            listener.getLogger().println("This XrayInstance requires an User scoped credential.");
+
+            XrayEnvironmentVariableSetter
+                    .failed("This XrayInstance requires an User scoped credential.")
+                    .setAction(build, listener);
+            throw new AbortException("This XrayInstance requires an User scoped credential.");
         }
 
         final CredentialResolver credentialResolver = importInstance
