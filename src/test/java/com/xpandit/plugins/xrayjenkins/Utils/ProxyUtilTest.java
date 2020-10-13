@@ -26,13 +26,13 @@ import static org.mockito.Mockito.when;
 @PowerMockIgnore({"javax.net.ssl.*", "javax.management.*"})
 public class ProxyUtilTest {
 
-    public static final String PROXY_HOSTNAME = "whatever";
-    public static final int PROXY_PORT = 8080;
-    public static final String JIRA_DOMAIN = "localhost";
-    public static final int JIRA_PORT = 8084;
-    public static final String JIRA_HTTP_URL = "http://" + JIRA_DOMAIN + ":" + JIRA_PORT;
-    public static final String JIRA_USERNAME = "admin";
-    public static final String JIRA_PASSWORD = "admin";
+    private static final String PROXY_HOSTNAME = "whatever";
+    private static final int PROXY_PORT = 8080;
+    private static final String JIRA_DOMAIN = "localhost";
+    private static final int JIRA_PORT = 8084;
+    private static final String JIRA_HTTP_URL = "http://" + JIRA_DOMAIN + ":" + JIRA_PORT;
+    private static final String JIRA_USERNAME = "admin";
+    private static final String JIRA_PASSWORD = "admin";
 
     @Mock
     private Jenkins jenkins;
@@ -47,6 +47,7 @@ public class ProxyUtilTest {
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.mockStatic(ProxyConfiguration.class);
 
+        Whitebox.setInternalState(jenkins, "proxy", proxyConfiguration);
         Whitebox.setInternalState(jenkins, "proxy", proxyConfiguration);
 
         when(ProxyConfiguration.load()).thenReturn(proxyConfiguration);
