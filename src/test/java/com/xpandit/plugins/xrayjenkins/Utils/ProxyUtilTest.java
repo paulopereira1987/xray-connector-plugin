@@ -91,7 +91,19 @@ public class ProxyUtilTest {
     @Test
     public void testCreateProxyWithProxyAndNoProxyHost_success() {
         setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
-        setNoProxyHost(JIRA_HTTP_URL);
+        setNoProxyHost(JIRA_DOMAIN);
+
+        createProxyBeanAndXrayClient();
+        assertTrue(xrayClient.testConnection().isSuccessful());
+    }
+
+    @Test
+    public void testCreateProxyWithProxyAndNoProxyHosts_success() {
+        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
+        setNoProxyHost("host1 \n" +
+                       "host2 \n" +
+                       "host3 \n" +
+                       JIRA_DOMAIN);
 
         createProxyBeanAndXrayClient();
         assertTrue(xrayClient.testConnection().isSuccessful());
@@ -99,6 +111,15 @@ public class ProxyUtilTest {
 
     @Test
     public void testCreateProxyWithProxyAndNoProxyHost_failure() {
+        setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
+        setNoProxyHost("host1");
+
+        createProxyBeanAndXrayClient();
+        assertFalse(xrayClient.testConnection().isSuccessful());
+    }
+
+    @Test
+    public void testCreateProxyWithProxyAndNoProxyHostAndPort_failure() {
         setProxyConfiguration(PROXY_HOSTNAME, PROXY_PORT);
         setNoProxyHost("http://" + JIRA_DOMAIN + ":" + (JIRA_PORT + 1));
 
