@@ -7,18 +7,46 @@
  */
 package com.xpandit.plugins.xrayjenkins.task;
 
+import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
-import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
+import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
+import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.compatibility.XrayExportBuilderCompatibilityDelegate;
+import com.xpandit.xray.exception.XrayClientCoreGenericException;
+import com.xpandit.xray.service.XrayExporter;
 import com.xpandit.xray.service.impl.XrayExporterCloudImpl;
+import com.xpandit.xray.service.impl.XrayExporterImpl;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
+import hudson.AbortException;
 import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.AbstractProject;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.tasks.SimpleBuildStep;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -28,36 +56,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import hudson.model.Item;
-import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
-import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
-import com.xpandit.xray.exception.XrayClientCoreGenericException;
-import com.xpandit.xray.service.XrayExporter;
-import com.xpandit.xray.service.impl.XrayExporterImpl;
-import hudson.AbortException;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.AbstractProject;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import jenkins.tasks.SimpleBuildStep;
-import net.sf.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
-import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfigurationOrFirstAvailable;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
 
@@ -125,6 +125,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         this.filter = filter;
         this.filePath = filePath;
         this.serverInstance = serverInstance;
+        this.credentialId = credentialId;
 
         //compatibility assigns
         this.xrayInstance = ConfigurationUtils.getConfiguration(serverInstance);
@@ -344,7 +345,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
                     fields.get("issues"),
                     fields.get("filter"),
                     fields.get("filePath"),
-                    fields.get("credentialId"));
+                    formData.getString("credentialId"));
 			
         }
 
@@ -426,7 +427,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         }
 
         public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {
-            final XrayInstance xrayInstance = getConfiguration(serverInstance);
+            final XrayInstance xrayInstance = getConfigurationOrFirstAvailable(serverInstance);
             if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
                 return FormValidation.error("This XrayInstance requires an User scoped credential.");
             }

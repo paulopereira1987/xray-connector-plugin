@@ -7,9 +7,6 @@
  */
 package com.xpandit.plugins.xrayjenkins.task;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
@@ -59,8 +56,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
-import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;
-import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfigurationOrFirstAvailable;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 
 /**
@@ -330,7 +326,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         }
 
         public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {
-            final XrayInstance xrayInstance = getConfiguration(serverInstance);
+            final XrayInstance xrayInstance = getConfigurationOrFirstAvailable(serverInstance);
             if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
                 return FormValidation.error("This XrayInstance requires an User scoped credential.");
             }

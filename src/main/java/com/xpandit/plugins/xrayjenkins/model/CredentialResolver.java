@@ -5,21 +5,15 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil;
 import hudson.model.Cause;
-import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.User;
 import hudson.util.Secret;
-
-import java.net.Authenticator;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nullable;
-
-import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.Stapler;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
 
 public class CredentialResolver {
     private final String credentialId;

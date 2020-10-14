@@ -56,7 +56,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +73,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfigurationOrFirstAvailable;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
 import static com.xpandit.xray.util.UploadResultUtil.MAX_RETRY_AFTER_TIME_SECONDS;
@@ -827,7 +827,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         }
 
         public FormValidation doCheckCredentialId(@org.kohsuke.stapler.QueryParameter String value, @org.kohsuke.stapler.QueryParameter String serverInstance) {
-            final XrayInstance xrayInstance = getConfiguration(serverInstance);
+            final XrayInstance xrayInstance = getConfigurationOrFirstAvailable(serverInstance);
             if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
                 return FormValidation.error("This XrayInstance requires an User scoped credential.");
             }
