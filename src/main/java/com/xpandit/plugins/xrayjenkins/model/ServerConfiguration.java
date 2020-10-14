@@ -112,7 +112,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         if (StringUtils.isBlank(credentialId)) {
-            return FormValidation.error("Authentication is Optional, however, is required in order to test the connection.");
+            return FormValidation.error("Authentication is Optional, however it's required in order to test the connection.");
         }
 
         if (StringUtils.isBlank(hosting)) {

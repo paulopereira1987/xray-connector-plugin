@@ -61,7 +61,7 @@ public class XrayInstance {
 	}
 
 	public Optional<CredentialResolver> getCredential(final Run<?, ?> runContext) {
-		if (this.credentialResolver == null && this.credentialId != null) {
+		if (this.credentialResolver == null && StringUtils.isNotBlank(this.credentialId)) {
 			this.credentialResolver = new CredentialResolver(this.credentialId, runContext);
 		}
 

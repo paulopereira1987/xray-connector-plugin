@@ -11,11 +11,14 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.acegisecurity.Authentication;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,10 +59,15 @@ public class CredentialUtil {
      * @return All the User credentials from a given Item context.
      */
     public static List<StandardUsernamePasswordCredentials> getAllUserScopedCredentials(@Nullable final Item item) {
+        return getAllUserScopedCredentials(item, Jenkins.getAuthentication());
+    }
+
+    public static List<StandardUsernamePasswordCredentials> getAllUserScopedCredentials(@Nullable final Item item,
+                                                                                        @Nullable final Authentication authentication) {
         List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
                 StandardUsernamePasswordCredentials.class,
                 item,
-                Jenkins.getAuthentication(),
+                authentication,
                 Collections.emptyList());
         return Collections.unmodifiableList(credentials);
     }
