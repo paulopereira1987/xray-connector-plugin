@@ -45,6 +45,24 @@
   	 		</div>
   		</f:entry> 
   </j:file>
+
+	<j:file xmlns:j="jelly:core" var="addSwitchableTestField" omitXmlDeclaration='true' escapeText='false' trim='true'
+			outputMode='HTML'>
+		<f:entry title="{{label}}">
+			<select name="_.inputTestInfoSwitcher" class="setting-input"
+					id="selectTestInfoInputType_${descriptor.defaultBuildID()}"
+					onchange='switchTestInfoInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer_${descriptor.defaultBuildID()}")'>
+				<option value='filePath'>${%import-parameter.content-type-filepath}</option>
+				<option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
+			</select>
+		</f:entry>
+		<f:entry>
+			<div id="switchTestInfoContainer_${descriptor.defaultBuildID()}">
+				${addInput}
+			</div>
+		</f:entry>
+	</j:file>
+
   <!--End of templates spec -->
 
   <script id="_${descriptor.defaultBuildID()}">
@@ -78,11 +96,7 @@
 	   		switcherLastConfiguration_${descriptor.defaultBuildID()}();
 		}
 
-	  /*
-	   * Switches the HTML element for the importInfo field
-	   */
 	  switchInput_${descriptor.defaultBuildID()} = function(container){
-
 	    //current selected input type, from the select HTML element
 	  	var selectedInputType = Q("#selectInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
 
@@ -117,6 +131,48 @@
 
 	  }
 
+	  	//TODO XRAYJENKINS-88 This code was copied from the function above, it should be refactored
+		switchTestInfoInput_${descriptor.defaultBuildID()} = function (container) {
+			//current selected input type, from the select HTML element
+			var selectTestInfoInputType = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
+
+			if (!selectTestInfoInputType)
+				return;
+
+			var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
+
+			//selected input type, from last configuration
+			var lastSwitcherConfig = '${instance.getTestInfoInputSwitcher()}';
+
+			//field to render
+			var _field = (formats[key]).configurableFields.filter(function (field) {
+				return field.key == 'testImportInfo'
+			})[0];
+			_field = JSON.parse(JSON.stringify(_field));
+
+			var renderConfiguration = (lastSwitcherConfig == selectTestInfoInputType);
+
+			if (!renderConfiguration)
+				_field.configuration = '';
+
+			if (selectTestInfoInputType == 'filePath') {// content is a file path
+				var template = Handlebars.compile('${addInput}');
+				var result = template(_field);
+				Q(container).html(result);
+			} else if (selectTestInfoInputType == 'fileContent') { // content is in JSON format
+				var template = Handlebars.compile('${addTextarea}');
+				var result = template(_field);
+				Q(container).html(result);
+				//prettify();
+			}
+
+		}
+
+	  /*
+	   *  TODO XRAYJENKINS-88 this only works for Test Execution Field:
+	   *  1 - lastSwitcherConfig will have the value for the Test Execution field
+	   *  2 - assumes the select element has id 'selectInputType_...'. This is true for Test Execution field
+	   */
 	  switcherLastConfiguration_${descriptor.defaultBuildID()} = function(){
 		//selected input type, from last configuration
 		var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
@@ -203,6 +259,8 @@
 				Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
 
 				Handlebars.registerPartial("addSwitchableField", '${addSwitchableField}');
+
+				 Handlebars.registerPartial("addSwitchableTestField", '${addSwitchableTestField}');
 
 				//get last chosen format
 				var formatSuffix = '${instance.getFormatSuffix()}';
