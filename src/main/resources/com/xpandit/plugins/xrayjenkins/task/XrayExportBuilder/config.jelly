@@ -1,7 +1,7 @@
 <?jelly escape-by-default='false'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:invisibleEntry>
-        <div id="xray_exportFeatures_${descriptor.getUuid()}" class="export-features-wrapper batata"></div>
+        <div id="xray_exportFeatures_${descriptor.getUuid()}" class="export-features-wrapper"></div>
     </f:invisibleEntry>
 
     <f:entry title="${%Jira Instance}" field="serverInstance">
