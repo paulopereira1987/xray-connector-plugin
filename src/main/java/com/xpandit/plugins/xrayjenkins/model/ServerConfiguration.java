@@ -96,7 +96,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         }
             
         if (StringUtils.isBlank(value)) {
-            return FormValidation.warning("Not filling the Credentials is not required, but you will have to fill the in each Build Task.");
+            return FormValidation.warning("Filling the Credentials is not required. They will have to be filled in each Build task.");
         }
         
         if (!credentialExists(item, value)) {
@@ -112,7 +112,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         if (StringUtils.isBlank(credentialId)) {
-            return FormValidation.error("Authentication is Optional, however it's required in order to test the connection.");
+            return FormValidation.error("Authentication is optional, however it is required in order to test the connection.");
         }
 
         if (StringUtils.isBlank(hosting)) {

@@ -31,12 +31,7 @@ public class CredentialUtil {
      * @return All the System credentials from a given Item context.
      */
     public static List<StandardUsernamePasswordCredentials> getAllCredentials(@Nullable final Item item) {
-        final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
-                StandardUsernamePasswordCredentials.class,
-                item,
-                ACL.SYSTEM,
-                Collections.emptyList());
-        return Collections.unmodifiableList(credentials);
+        return getStandardUsernamePasswordCredentials(item, ACL.SYSTEM);
     }
 
     /**
@@ -69,12 +64,7 @@ public class CredentialUtil {
      */
     public static List<StandardUsernamePasswordCredentials> getAllUserScopedCredentials(@Nullable final Item item,
                                                                                         @Nullable final Authentication authentication) {
-        List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
-                StandardUsernamePasswordCredentials.class,
-                item,
-                authentication,
-                Collections.emptyList());
-        return Collections.unmodifiableList(credentials);
+        return getStandardUsernamePasswordCredentials(item, authentication);
     }
 
     /**
@@ -95,5 +85,17 @@ public class CredentialUtil {
             result.with(credential);
         }
         return result.includeCurrentValue(credentialId);
+    }
+
+    private static List<StandardUsernamePasswordCredentials> getStandardUsernamePasswordCredentials(
+            @Nullable Item item,
+            @Nullable Authentication authentication
+    ) {
+        List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
+                StandardUsernamePasswordCredentials.class,
+                item,
+                authentication,
+                Collections.emptyList());
+        return Collections.unmodifiableList(credentials);
     }
 }
