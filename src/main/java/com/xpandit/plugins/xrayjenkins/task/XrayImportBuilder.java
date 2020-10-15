@@ -620,6 +620,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                 dataParams.put(com.xpandit.xray.model.DataParameter.FILEPATH, results);
 
             }
+
             if (StringUtils.isNotBlank(this.importInfo)) {
                 String resolved = expandVariable(env, this.importInfo);
 
@@ -633,7 +634,23 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
                 dataParams.put(com.xpandit.xray.model.DataParameter.INFO, info);
             }
-            // TODO XRAYJENKINS-88 Implement the same "if" block as before but for the "this.testImportInfo"
+
+            if (StringUtils.isNotBlank(this.testImportInfo)) {
+                String resolvedTestImportInfo = expandVariable(env, this.testImportInfo);
+
+                Content testInfo;
+                if (this.inputInfoSwitcher.equals("filePath")) {
+                    FilePath testInfoFile = getFile(workspace, resolvedTestImportInfo, listener);
+                    testInfo = new com.xpandit.xray.model.FileStream(testInfoFile.getName(),
+                                                                     testInfoFile.read(),
+                                                                     targetEndpoint.getInfoFieldMediaType());
+                } else {
+                    testInfo = new com.xpandit.xray.model.StringContent(resolvedTestImportInfo,
+                                                                        targetEndpoint.getInfoFieldMediaType());
+                }
+
+                dataParams.put(com.xpandit.xray.model.DataParameter.TEST_INFO, testInfo);
+            }
 
             listener.getLogger().println("Starting to import results from " + resultsFile.getName());
 

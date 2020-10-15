@@ -94,6 +94,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     public String getLastModified() {
         return lastModified;
     }
+
     @DataBoundSetter
     public void setLastModified(String lastModified) {
         this.lastModified = lastModified;

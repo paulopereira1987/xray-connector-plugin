@@ -17,7 +17,7 @@
   </j:file>
 
   <j:file xmlns:j="jelly:core" var="addSameExecutionCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
-	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing multiple execution report files using a glob expression, the results will be imported to the same Test Execution">
+	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing 1tiple execution report files using a glob expression, the results will be imported to the same Test Execution">
 		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
 	  </f:entry>
   </j:file>
@@ -142,7 +142,7 @@
 			var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
 
 			//selected input type, from last configuration
-			var lastSwitcherConfig = '${instance.getTestInfoInputSwitcher()}';
+			var lastSwitcherConfig = '${instance.getInputTestInfoSwitcher()}';
 
 			//field to render
 			var _field = (formats[key]).configurableFields.filter(function (field) {
@@ -175,10 +175,10 @@
 	   */
 	  switcherLastConfiguration_${descriptor.defaultBuildID()} = function(){
 		//selected input type, from last configuration
-		var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
+		var lastSwitcherConfig = '${instance.getInputTestInfoSwitcher()}';
 
 		if(lastSwitcherConfig !== '' ){//making sure the switcher gets the last configuration value
-			var select = Q("#selectInputType_${descriptor.defaultBuildID()}");
+			var select = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}");
 			if(select){
 				select.val(lastSwitcherConfig);
 				select.trigger('change');
