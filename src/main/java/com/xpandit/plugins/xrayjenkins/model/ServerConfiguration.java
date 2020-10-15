@@ -96,7 +96,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         }
             
         if (StringUtils.isBlank(value)) {
-            return FormValidation.warning("Filling the Credentials is not required. They will have to be filled in each Build task.");
+            return FormValidation.warning("Leave the credentials field empty if you want to pick user scoped credentials for each Build Task.");
         }
         
         if (!credentialExists(item, value)) {
