@@ -283,10 +283,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             addFailedOpEnvironmentVariables(run, listener);
             listener.error(e.getMessage());
             throw new AbortException(e.getMessage());
-        } finally {
-            client.shutdown();
         }
-
     }
 
     private FilePath getFile(

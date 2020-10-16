@@ -720,8 +720,6 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             LOG.error(ERROR_LOG, e);
             listener.error(e.getMessage());
             throw new IOException(e);
-        } finally {
-            client.shutdown();
         }
     }
 
