@@ -118,7 +118,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private String formatSuffix; //value of format select
     private String serverInstance;//Configuration ID of the Jira instance
     private String inputInfoSwitcher;//value of the input type switcher
-    private String inputTestInfoSwitcher; // value of the test input switcher
+    private String inputTestInfoSwitcher;
     private String endpointName;
     private String projectKey;
     private String testEnvironments;
@@ -241,7 +241,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public Map<String, String> getDynamicFields() {
-        return dynamicFields;
+        return this.dynamicFields;
     }
 
     @DataBoundSetter
@@ -250,7 +250,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public XrayInstance getXrayInstance() {
-        return xrayInstance;
+        return this.xrayInstance;
     }
 
     @DataBoundSetter
@@ -259,7 +259,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public Endpoint getEndpoint() {
-        return endpoint;
+        return this.endpoint;
     }
 
     @DataBoundSetter
@@ -268,11 +268,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getFormatSuffix() {
-        return formatSuffix;
+        return this.formatSuffix;
     }
 
     public String getServerInstance() {
-        return serverInstance;
+        return this.serverInstance;
     }
 
     public void setServerInstance(String serverInstance) {
@@ -284,7 +284,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getEndpointName() {
-        return endpointName;
+        return this.endpointName;
     }
 
     public void setEndpointName(String endpointName) {
@@ -292,7 +292,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getProjectKey() {
-        return projectKey;
+        return this.projectKey;
     }
 
     public void setProjectKey(String projectKey) {
@@ -300,7 +300,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getTestEnvironments() {
-        return testEnvironments;
+        return this.testEnvironments;
     }
 
     public void setTestEnvironments(String testEnvironments) {
@@ -308,7 +308,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getTestPlanKey() {
-        return testPlanKey;
+        return this.testPlanKey;
     }
 
     public void setTestPlanKey(String testPlanKey) {
@@ -316,7 +316,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getFixVersion() {
-        return fixVersion;
+        return this.fixVersion;
     }
 
     public void setFixVersion(String fixVersion) {
@@ -324,7 +324,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getImportFilePath() {
-        return importFilePath;
+        return this.importFilePath;
     }
 
     public void setImportFilePath(String importFilePath) {
@@ -332,7 +332,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getTestExecKey() {
-        return testExecKey;
+        return this.testExecKey;
     }
 
     public void setTestExecKey(String testExecKey) {
@@ -340,7 +340,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getRevision() {
-        return revision;
+        return this.revision;
     }
 
     public void setRevision(String revision) {
@@ -348,7 +348,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getImportInfo() {
-        return importInfo;
+        return this.importInfo;
     }
 
     public void setImportInfo(String importInfo) {
@@ -356,7 +356,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getImportToSameExecution() {
-        return importToSameExecution;
+        return this.importToSameExecution;
     }
 
     public void setImportToSameExecution(String importToSameExecution) {
@@ -368,11 +368,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     public String getInputInfoSwitcher() {
-        return inputInfoSwitcher;
+        return this.inputInfoSwitcher;
     }
 
     public String getInputTestInfoSwitcher() {
-        return inputTestInfoSwitcher;
+        return this.inputTestInfoSwitcher;
     }
 
     public void setInputInfoSwitcher(String inputInfoSwitcher) {

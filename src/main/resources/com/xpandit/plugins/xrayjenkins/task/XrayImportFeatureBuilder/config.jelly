@@ -13,6 +13,14 @@
         <f:textbox/>
     </f:entry>
 
+    <f:entry title="${%Test Info file (optional)}" field="testInfo">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Preconditions file (optional)}" field="preconditions">
+        <f:textbox/>
+    </f:entry>
+
     <f:entry title="${%Modified in the last hours}" field="lastModified">
         <f:textbox/>
     </f:entry>

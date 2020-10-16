@@ -19,6 +19,7 @@ import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.filefilters.OnlyFeatureFilesInPathFilter;
 import com.xpandit.xray.exception.XrayClientCoreGenericException;
+import com.xpandit.xray.model.Content;
 import com.xpandit.xray.model.FileStream;
 import com.xpandit.xray.model.UploadResult;
 import com.xpandit.xray.service.XrayTestImporter;
@@ -52,6 +53,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
+
 /**
  * This class is responsible for performing the Xray: Cucumber Features Import Task
  */
@@ -63,20 +66,26 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     private String folderPath;
     private String projectKey;
     private String lastModified;//this must be a String because of pipeline projects
+    private String testInfo;
+    private String preconditions;
 
     @DataBoundConstructor
     public XrayImportFeatureBuilder(String serverInstance,
                                     String folderPath,
                                     String projectKey,
-                                    String lastModified){
+                                    String lastModified,
+                                    String testInfo,
+                                    String preconditions){
         this.serverInstance = serverInstance;
         this.folderPath = folderPath;
         this.projectKey = projectKey;
         this.lastModified = lastModified;
+        this.testInfo = testInfo;
+        this.preconditions = preconditions;
     }
 
     public String getServerInstance() {
-        return serverInstance;
+        return this.serverInstance;
     }
 
     public void setServerInstance(String serverInstance) {
@@ -84,15 +93,31 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     }
 
     public String getFolderPath() {
-        return folderPath;
+        return this.folderPath;
     }
 
     public void setFolderPath(String folderPath) {
         this.folderPath = folderPath;
     }
 
+    public String getTestInfo() {
+        return this.testInfo;
+    }
+
+    public void setTestInfo(String folderPath) {
+        this.testInfo = testInfo;
+    }
+
+    public String getPreconditions() {
+        return this.preconditions;
+    }
+
+    public void setPreconditions(String preconditions) {
+        this.preconditions = preconditions;
+    }
+
     public String getLastModified() {
-        return lastModified;
+        return this.lastModified;
     }
 
     @DataBoundSetter
@@ -101,7 +126,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     }
 
     public String getProjectKey() {
-        return projectKey;
+        return this.projectKey;
     }
 
     public void setProjectKey(String projectKey) {
@@ -170,6 +195,8 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         try{
             final Set<String> validFilePaths = FileUtils.getFeatureFileNamesFromWorkspace(workspace, this.folderPath, listener);
             final FilePath zipFile = createZipFile(workspace);
+            FileStream testInfoFile = null;
+            FileStream preconditionsFile = null;
 
             Path path = Paths.get(this.folderPath);
             FilePath base = workspace;
@@ -182,9 +209,27 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
             base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
 
-            // TODO XRAYJENKINS-88 Implement new multipart fields
-            // Uploads the Zip file to the Jira instance
-            UploadResult uploadResult = uploadZipFile(client, listener, zipFile);
+            if (StringUtils.isNotBlank(this.testInfo)) {
+
+                listener.getLogger().println("Getting Test Info file...");
+
+                FilePath filePath = getFile(workspace, this.testInfo, listener);
+                testInfoFile = new FileStream(filePath.getName(),
+                                              filePath.read(),
+                                              ContentType.APPLICATION_JSON);
+            }
+
+            if (StringUtils.isNotBlank(this.preconditions)) {
+
+                listener.getLogger().println("Getting preconditions file...");
+
+                FilePath filePath = getFile(workspace, this.preconditions, listener);
+                preconditionsFile = new FileStream(filePath.getName(),
+                                                   filePath.read(),
+                                                   ContentType.APPLICATION_JSON);
+            }
+
+            UploadResult uploadResult = uploadZipFile(client, listener, zipFile, testInfoFile, preconditionsFile);
 
             final HostingType hostingType = instance.getHosting() == null ? HostingType.SERVER : instance.getHosting();
             XrayEnvironmentVariableSetter
@@ -204,6 +249,22 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         }
 
     }
+
+    private FilePath getFile(FilePath workspace, String filePath, TaskListener listener) throws IOException, InterruptedException {
+        if (workspace == null) {
+            throw new XrayJenkinsGenericException("No workspace in this current node");
+        }
+
+        if (StringUtils.isBlank(filePath)) {
+            throw new XrayJenkinsGenericException("No file path was specified");
+        }
+
+        FilePath file = FileUtils.readFile(workspace, filePath.trim(), listener);
+        if (file.isDirectory() || !file.exists()) {
+            throw new XrayJenkinsGenericException("File path is a directory or the file doesn't exist");
+        }
+        return file;
+    }
     
     private void deleteFile(FilePath file, TaskListener listener) throws IOException, InterruptedException {
         try {
@@ -215,12 +276,18 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         }
     }
 
-    private UploadResult uploadZipFile(XrayTestImporter client, TaskListener listener, FilePath zipFile) throws IOException, InterruptedException {
+    private UploadResult uploadZipFile(
+            XrayTestImporter client,
+            TaskListener listener,
+            FilePath zipFile,
+            FileStream testInfo,
+            FileStream preconditions
+    ) throws IOException, InterruptedException {
         FileStream zipFileStream = new FileStream(
                 zipFile.getName(),
                 zipFile.read(),
                 ContentType.APPLICATION_JSON);
-        UploadResult uploadResult = client.importFeatures(this.projectKey, zipFileStream);
+        UploadResult uploadResult = client.importFeatures(this.projectKey, zipFileStream, testInfo, preconditions);
         listener.getLogger().println(uploadResult.getMessage());
 
         return uploadResult;

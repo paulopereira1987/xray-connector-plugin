@@ -17,7 +17,7 @@
   </j:file>
 
   <j:file xmlns:j="jelly:core" var="addSameExecutionCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
-	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing 1tiple execution report files using a glob expression, the results will be imported to the same Test Execution">
+	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing multiple execution report files using a glob expression, the results will be imported to the same Test Execution">
 		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
 	  </f:entry>
   </j:file>
@@ -131,7 +131,6 @@
 
 	  }
 
-	  	//TODO XRAYJENKINS-88 This code was copied from the function above, it should be refactored
 		switchTestInfoInput_${descriptor.defaultBuildID()} = function (container) {
 			//current selected input type, from the select HTML element
 			var selectTestInfoInputType = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
@@ -168,11 +167,6 @@
 
 		}
 
-	  /*
-	   *  TODO XRAYJENKINS-88 this only works for Test Execution Field:
-	   *  1 - lastSwitcherConfig will have the value for the Test Execution field
-	   *  2 - assumes the select element has id 'selectInputType_...'. This is true for Test Execution field
-	   */
 	  switcherLastConfiguration_${descriptor.defaultBuildID()} = function(){
 		//selected input type, from last configuration
 		var lastSwitcherConfig = '${instance.getInputTestInfoSwitcher()}';
