@@ -215,7 +215,7 @@
 
           	    if(lastSwitcherConfig){//making sure the switcher gets the last configuration value
           	    	var select = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}");
-          	    	if(select.length() > 0){
+          	    	if(select.length > 0){
           	    		select.val(lastSwitcherConfig);
           	    		select.trigger('change');
           	    	}
