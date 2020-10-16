@@ -12,6 +12,9 @@ import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import hudson.util.ListBoxModel;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.List;
 
 public class FormUtils {
@@ -24,16 +27,22 @@ public class FormUtils {
     public static ListBoxModel getServerInstanceItems(){
         ListBoxModel items = new ListBoxModel();
         List<XrayInstance> serverInstances =  ServerConfiguration.get().getServerInstances();
-        if(serverInstances == null){
+        if(CollectionUtils.isEmpty(serverInstances)) {
             return items;
         }
+
         for(XrayInstance sc : serverInstances){
             HostingType instanceHostingType = sc.getHosting();
 
             if(instanceHostingType == null) {
                 throw new XrayJenkinsGenericException("Null hosting type found");
             } else {
-                items.add(sc.getAlias(),instanceHostingType.toString() + "-" + sc.getConfigID());
+                String alias = sc.getAlias();
+                if (StringUtils.isBlank(sc.getCredentialId())) {
+                    alias = "[User Auth required] " + alias;
+                }
+
+                items.add(alias, instanceHostingType.toString() + "-" + sc.getConfigID());
             }
         }
         return items;

@@ -16,6 +16,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
@@ -39,6 +40,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -51,6 +53,7 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -65,9 +68,13 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfigurationOrFirstAvailable;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
 import static com.xpandit.xray.util.UploadResultUtil.MAX_RETRY_AFTER_TIME_SECONDS;
 
@@ -108,6 +115,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private static final String REVISION_FIELD = "revision";
     private static final String IMPORT_INFO = "importInfo";
     private static final String TEST_IMPORT_INFO = "testImportInfo";
+    private static final String CREDENTIAL_ID = "credentialId";
     private static final String FORMAT_SUFFIX = "formatSuffix";
     private static final String CLOUD_DOC_URL = "https://confluence.xpand-it.com/display/XRAYCLOUD/Import+Execution+Results+-+REST";
     private static final String SERVER_DOC_URL = "https://confluence.xpand-it.com/display/XRAY/Import+Execution+Results+-+REST";
@@ -130,6 +138,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private String importInfo;
     private String testImportInfo;
     private String importToSameExecution;
+    private String credentialId;
 
 
     /**
@@ -176,6 +185,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
      * @param revision          the revision
      * @param importInfo        the importation info file or json content
      * @param inputInfoSwitcher filePath or fileContent switcher
+     * @param credentialId
      * @see <a href="https://jenkins.io/doc/developer/plugin-development/pipeline-integration/">Writing Pipeline-Compatible Plugins </a>
      */
     @DataBoundConstructor
@@ -193,10 +203,12 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             String testImportInfo,
             String inputInfoSwitcher,
             String inputTestInfoSwitcher,
-            String importToSameExecution
+            String importToSameExecution,
+            @Nullable String credentialId
     ) {
         this.serverInstance = serverInstance;
         this.endpointName = endpointName;
+        this.credentialId = credentialId;
         Endpoint e = lookupForEndpoint();
         this.formatSuffix = e != null ? e.getSuffix() : null;
         this.projectKey = projectKey;
@@ -365,6 +377,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         this.importToSameExecution = importToSameExecution;
     }
 
+    public String getCredentialId() {
+        return this.credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
     public String getFormatName() {
         return Endpoint.lookupByName(endpointName).getName();
     }
@@ -475,8 +495,18 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     .failed("The Jira server configuration of this task was not found.")
                     .setAction(build, listener);
             throw new AbortException("The Jira server configuration of this task was not found.");
+        } else if (StringUtils.isBlank(importInstance.getCredentialId()) && StringUtils.isBlank(credentialId)) {
+            listener.getLogger().println("This XrayInstance requires an User scoped credential.");
+
+            XrayEnvironmentVariableSetter
+                    .failed("This XrayInstance requires an User scoped credential.")
+                    .setAction(build, listener);
+            throw new AbortException("This XrayInstance requires an User scoped credential.");
         }
 
+        final CredentialResolver credentialResolver = importInstance
+                .getCredential(build)
+                .orElseGet(() -> new CredentialResolver(this.credentialId, build));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         final HostingType hostingType = importInstance.getHosting() == null
                 ? HostingType.SERVER
@@ -484,13 +514,13 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         XrayImporter client;
 
         if (hostingType == HostingType.CLOUD) {
-            client = new XrayImporterCloudImpl(importInstance.getCredential(build).getUsername(),
-                                               importInstance.getCredential(build).getPassword(),
+            client = new XrayImporterCloudImpl(credentialResolver.getUsername(),
+                                               credentialResolver.getPassword(),
                                                proxyBean);
         } else if (hostingType == HostingType.SERVER) {
             client = new XrayImporterImpl(importInstance.getServerAddress(),
-                                          importInstance.getCredential(build).getUsername(),
-                                          importInstance.getCredential(build).getPassword(),
+                                          credentialResolver.getUsername(),
+                                          credentialResolver.getPassword(),
                                           proxyBean);
         } else {
             XrayEnvironmentVariableSetter
@@ -781,6 +811,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         public XrayImportBuilder newInstance(StaplerRequest req, JSONObject formData) throws Descriptor.FormException {
             validateFormData(formData);
             Map<String, String> fields = getDynamicFields(formData.getJSONObject("dynamicFields"));
+            String credentialId = Optional.ofNullable(formData.get(CREDENTIAL_ID))
+                    .map(Object::toString)
+                    .filter(StringUtils::isNotBlank)
+                    .orElse(null);
+
             return new XrayImportBuilder(
                     (String) formData.get(SERVER_INSTANCE),
                     formData.getString(FORMAT_SUFFIX),
@@ -795,7 +830,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     fields.get(TEST_IMPORT_INFO),
                     fields.get(INPUT_INFO_SWITCHER),
                     fields.get(TEST_INFO_INPUT_SWITCHER),
-                    fields.get(SAME_EXECUTION_CHECKBOX));
+                    fields.get(SAME_EXECUTION_CHECKBOX),
+                    credentialId);
         }
 
         private void validateFormData(JSONObject formData) throws Descriptor.FormException {
@@ -848,6 +884,19 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
         public ListBoxModel doFillServerInstanceItems() {
             return FormUtils.getServerInstanceItems();
+        }
+
+        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item,
+                                                    @org.kohsuke.stapler.QueryParameter String credentialId) {
+            return getUserScopedCredentialsListBoxModel(item, credentialId);
+        }
+
+        public FormValidation doCheckCredentialId(@org.kohsuke.stapler.QueryParameter String value, @org.kohsuke.stapler.QueryParameter String serverInstance) {
+            final XrayInstance xrayInstance = getConfigurationOrFirstAvailable(serverInstance);
+            if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
+                return FormValidation.error("This XrayInstance requires an User scoped credential.");
+            }
+            return FormValidation.ok();
         }
 
         public long defaultBuildID() {

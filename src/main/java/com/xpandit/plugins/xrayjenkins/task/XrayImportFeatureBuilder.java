@@ -13,6 +13,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
@@ -30,6 +31,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -39,6 +41,7 @@ import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -50,6 +53,10 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
+import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfigurationOrFirstAvailable;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScopedCredentialsListBoxModel;
 
 /**
  * This class is responsible for performing the Xray: Cucumber Features Import Task
@@ -64,6 +71,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     private String lastModified;//this must be a String because of pipeline projects
     private String testInfo;
     private String preconditions;
+    private String credentialId;
 
     @DataBoundConstructor
     public XrayImportFeatureBuilder(
@@ -72,7 +80,8 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             String projectKey,
             String lastModified,
             String testInfo,
-            String preconditions
+            String preconditions,
+            String credentialId
     ) {
         this.serverInstance = serverInstance;
         this.folderPath = folderPath;
@@ -80,6 +89,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         this.lastModified = lastModified;
         this.testInfo = testInfo;
         this.preconditions = preconditions;
+        this.credentialId = credentialId;
     }
 
     public String getServerInstance() {
@@ -123,6 +133,14 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         this.lastModified = lastModified;
     }
 
+    public String getCredentialId() {
+        return this.credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
     public String getProjectKey() {
         return this.projectKey;
     }
@@ -162,16 +180,28 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             throw new AbortException();
         }
 
+        if (StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(credentialId)) {
+            listener.getLogger().println("This XrayInstance requires an User scoped credential.");
+
+            XrayEnvironmentVariableSetter
+                    .failed("This XrayInstance requires an User scoped credential.")
+                    .setAction(run, listener);
+            throw new AbortException("This XrayInstance requires an User scoped credential.");
+        }
+
+        final CredentialResolver credentialResolver = xrayInstance
+                .getCredential(run)
+                .orElseGet(() -> new CredentialResolver(this.credentialId, run));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         XrayTestImporter client;
         if (xrayInstance.getHosting() == HostingType.CLOUD) {
-            client = new XrayTestImporterCloudImpl(xrayInstance.getCredential(run).getUsername(),
-                                                   xrayInstance.getCredential(run).getPassword(),
+            client = new XrayTestImporterCloudImpl(credentialResolver.getUsername(),
+                                                   credentialResolver.getPassword(),
                                                    proxyBean);
         } else if (xrayInstance.getHosting() == null || xrayInstance.getHosting() == HostingType.SERVER) {
             client = new XrayTestImporterImpl(xrayInstance.getServerAddress(),
-                                              xrayInstance.getCredential(run).getUsername(),
-                                              xrayInstance.getCredential(run).getPassword(),
+                                              credentialResolver.getUsername(),
+                                              credentialResolver.getPassword(),
                                               proxyBean);
         } else {
             addFailedOpEnvironmentVariables(run, "Hosting type not recognized.", listener);
@@ -324,6 +354,11 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     public static class Descriptor extends BuildStepDescriptor<Builder> {
 
         @Override
+        public synchronized void load() {
+            super.load();
+        }
+
+        @Override
         @Nonnull
         public String getDisplayName() {
             return "Xray: Cucumber Features Import Task";
@@ -340,6 +375,10 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
         public ListBoxModel doFillServerInstanceItems() {
             return FormUtils.getServerInstanceItems();
+        }
+
+        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
+            return getUserScopedCredentialsListBoxModel(item, credentialId);
         }
 
         public FormValidation doCheckFolderPath(@QueryParameter String folderPath) {
@@ -373,5 +412,16 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             }
         }
 
+        public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {
+            final XrayInstance xrayInstance = getConfigurationOrFirstAvailable(serverInstance);
+            if (xrayInstance != null && StringUtils.isBlank(xrayInstance.getCredentialId()) && StringUtils.isBlank(value)) {
+                return FormValidation.error("This XrayInstance requires an User scoped credential.");
+            }
+            return FormValidation.ok();
+        }
+
+        public String getUuid() {
+            return UUID.randomUUID().toString();
+        }
     }
 }

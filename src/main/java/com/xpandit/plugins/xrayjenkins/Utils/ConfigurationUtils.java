@@ -7,14 +7,19 @@
  */
 package com.xpandit.plugins.xrayjenkins.Utils;
 
+import com.google.common.collect.Iterables;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 public class ConfigurationUtils {
 
@@ -25,7 +30,12 @@ public class ConfigurationUtils {
      * @param serverConfigurationId the server configuration ID
      * @return <code>XrayInstance</code> if found, <code>null</code> otherwise
      */
-    public static XrayInstance getConfiguration(String serverConfigurationId){
+    @Nullable
+    public static XrayInstance getConfiguration(String serverConfigurationId) {
+        if (StringUtils.isBlank(serverConfigurationId)) {
+            return null;
+        }
+
         if(serverConfigurationId.startsWith(HostingType.CLOUD.toString())){
             serverConfigurationId = StringUtils.removeStart(serverConfigurationId, HostingType.getCloudHostingName() + "-");
         } else if(serverConfigurationId.startsWith(HostingType.SERVER.toString())) {
@@ -33,7 +43,7 @@ public class ConfigurationUtils {
         }
 
         XrayInstance config =  null;
-        List<XrayInstance> serverInstances =  ServerConfiguration.get().getServerInstances();
+        List<XrayInstance> serverInstances = ServerConfiguration.get().getServerInstances();
         for(XrayInstance sc : serverInstances){
             if(sc.getConfigID().equals(serverConfigurationId)){
                 config = sc;
@@ -46,7 +56,12 @@ public class ConfigurationUtils {
         return config;
     }
 
-    /**
+    @Nullable
+    public static XrayInstance getConfigurationOrFirstAvailable(String serverConfigurationId) {
+        return Optional.ofNullable(getConfiguration(serverConfigurationId))
+                .orElseGet(() -> Iterables.getFirst(ServerConfiguration.get().getServerInstances(), null));
+    }
+        /**
      * Utility method to check if any xray Jira server configuration exists
      * @return <code>true</code> if any server configuration is available, <code>false</code> otherwise
      */
