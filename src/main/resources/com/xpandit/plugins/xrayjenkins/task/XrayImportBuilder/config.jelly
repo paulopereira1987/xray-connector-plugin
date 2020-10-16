@@ -154,7 +154,6 @@
                     var template = Handlebars.compile('${addTextarea}');
                     var result = template(_field);
                     Q(container).html(result);
-                    prettify();
                 }
 
             }
@@ -193,7 +192,6 @@
             		var template = Handlebars.compile('${addTextarea}');
             		var result = template(_field);
             		Q(container).html(result);
-            		prettify();
             	}
 
             }
