@@ -164,7 +164,7 @@
 
             	if(!selectTestInfoInputType){
             	    console.error("Couldn't find Test Info selected option element");
-            		return;
+            	    return;
             	}
 
             	var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
