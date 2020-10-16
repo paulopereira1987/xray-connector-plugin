@@ -5,24 +5,32 @@
     </f:invisibleEntry>
 
     <f:entry title="${%Jira Instance}" field="serverInstance">
-            <f:select id="importCucumber_selectInstance_${descriptor.defaultBuildID()}" />
-        </f:entry>
+        <f:select id="importCucumber_selectInstance_${descriptor.defaultBuildID()}" />
+    </f:entry>
 
-        <f:entry title="${%Credentials}" field="credentialId">
-            <f:select id="importCucumber_credentialId_${descriptor.defaultBuildID()}" />
-        </f:entry>
+    <f:entry title="${%Credentials}" field="credentialId">
+        <f:select id="importCucumber_credentialId_${descriptor.defaultBuildID()}" />
+    </f:entry>
 
-        <f:entry title="${%Project Key}" field="projectKey">
-            <f:textbox/>
-        </f:entry>
+    <f:entry title="${%Project Key}" field="projectKey">
+        <f:textbox/>
+    </f:entry>
 
-        <f:entry title="${%Cucumber feature files directory}" field="folderPath">
-            <f:textbox/>
-        </f:entry>
+    <f:entry title="${%Cucumber feature files directory}" field="folderPath">
+        <f:textbox/>
+    </f:entry>
 
-        <f:entry title="${%Modified in the last hours}" field="lastModified">
-            <f:textbox/>
-        </f:entry>
+    <f:entry title="${%Test Info file (optional)}" field="testInfo">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Preconditions file (optional)}" field="preconditions">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Modified in the last hours}" field="lastModified">
+        <f:textbox/>
+    </f:entry>
 
     <script type="text/javascript">
         (function(Q) {
