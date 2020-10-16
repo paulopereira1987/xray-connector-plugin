@@ -21,6 +21,12 @@
 		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
 	  </f:entry>
   </j:file>
+  
+  <j:file xmlns:j="jelly:core" var="addImportInParallelCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
+  	  <f:entry field="importInParallel" title="Import in parallel" description="Import all results files in parallel, using all available CPU cores.">
+  		  <f:checkbox name="importInParallel" id="import-in-parallel-checkbox" checked="${instance.isImportInParallel()}"/>
+  	  </f:entry>
+  </j:file>
 
   <j:file xmlns:j="jelly:core" var="addTextarea" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
   	 	<f:textarea field='{{key}}' value="{{configuration}}" style="width:100%"/>
@@ -192,6 +198,36 @@
 		    	Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
 		   			return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 				});
+				
+				Handlebars.registerHelper("switch", function(value, options) {
+                    this._switch_value_ = value;
+                    this._switch_break_ = false;
+                    var html = options.fn(this);
+                    delete this._switch_break_;
+                    delete this._switch_value_;
+                    return html;
+                });
+                
+                Handlebars.registerHelper("case", function(value, options) {
+                    var args = Array.prototype.slice.call(arguments);
+                    var options    = args.pop();
+                    var caseValues = args;
+                
+                    if (this._switch_break_ || caseValues.indexOf(this._switch_value_) === -1) {
+                        return '';
+                    } else {
+                        if (options.hash.break === true) {
+                            this._switch_break_ = true;
+                        }
+                        return options.fn(this);
+                    }
+                });
+                
+                Handlebars.registerHelper("default", function(options) {
+                    if (!this._switch_break_) {
+                        return options.fn(this);
+                    }
+                });
 
 				//Register partial templates, used for call templates inside templates
 				Handlebars.registerPartial("addInputEntry",'${addInputEntry}');
@@ -201,6 +237,7 @@
 				Handlebars.registerPartial("addTextarea", '${addTextarea}');
 
 				Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
+				Handlebars.registerPartial("addImportInParallelCheckboxEntry",'${addImportInParallelCheckboxEntry}');
 
 				Handlebars.registerPartial("addSwitchableField", '${addSwitchableField}');
 

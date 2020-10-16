@@ -16,6 +16,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +31,16 @@ import java.util.stream.Stream;
 public class FileUtils {
 
     private FileUtils() {
+    }
+    
+    public static void closeSilently(Closeable closeable) {
+        if(closeable != null) {
+            try {
+                closeable.close();
+            } catch(Throwable e) {
+                // Don't do anything
+            }
+        }
     }
 
     /**

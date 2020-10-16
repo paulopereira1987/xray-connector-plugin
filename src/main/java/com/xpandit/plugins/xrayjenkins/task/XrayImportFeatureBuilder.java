@@ -193,12 +193,10 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             deleteFile(zipFile, listener);
 
             return uploadResult;
-        } catch (XrayClientCoreGenericException e) {
+        } catch (XrayClientCoreGenericException | IOException e) {
             addFailedOpEnvironmentVariables(run, listener);
             listener.error(e.getMessage());
             throw new AbortException(e.getMessage());
-        } finally {
-            client.shutdown();
         }
 
     }
