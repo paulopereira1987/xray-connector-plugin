@@ -179,20 +179,22 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
      * @see <a href="https://jenkins.io/doc/developer/plugin-development/pipeline-integration/">Writing Pipeline-Compatible Plugins </a>
      */
     @DataBoundConstructor
-    public XrayImportBuilder(String serverInstance,
-                             String endpointName,
-                             String projectKey,
-                             String testEnvironments,
-                             String testPlanKey,
-                             String fixVersion,
-                             String importFilePath,
-                             String testExecKey,
-                             String revision,
-                             String importInfo,
-                             String testImportInfo,
-                             String inputInfoSwitcher,
-                             String inputTestInfoSwitcher,
-                             String importToSameExecution) {
+    public XrayImportBuilder(
+            String serverInstance,
+            String endpointName,
+            String projectKey,
+            String testEnvironments,
+            String testPlanKey,
+            String fixVersion,
+            String importFilePath,
+            String testExecKey,
+            String revision,
+            String importInfo,
+            String testImportInfo,
+            String inputInfoSwitcher,
+            String inputTestInfoSwitcher,
+            String importToSameExecution
+    ) {
         this.serverInstance = serverInstance;
         this.endpointName = endpointName;
         Endpoint e = lookupForEndpoint();
@@ -422,7 +424,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         }
     }
 
-    private FilePath getFile(FilePath workspace, String filePath, TaskListener listener) throws IOException, InterruptedException {
+    private FilePath getFile(
+            FilePath workspace,
+            String filePath,
+            TaskListener listener
+    ) throws IOException, InterruptedException {
         if (workspace == null) {
             throw new XrayJenkinsGenericException("No workspace in this current node");
         }
@@ -439,10 +445,12 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> build,
-                        @Nonnull FilePath workspace,
-                        @Nonnull Launcher launcher,
-                        @Nonnull TaskListener listener)
+    public void perform(
+            @Nonnull Run<?, ?> build,
+            @Nonnull FilePath workspace,
+            @Nonnull Launcher launcher,
+            @Nonnull TaskListener listener
+    )
             throws InterruptedException, IOException {
         /*
          * Compatibility fix:
@@ -470,18 +478,20 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         }
 
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
-        final HostingType hostingType = importInstance.getHosting() == null ? HostingType.SERVER : importInstance.getHosting();
+        final HostingType hostingType = importInstance.getHosting() == null
+                ? HostingType.SERVER
+                : importInstance.getHosting();
         XrayImporter client;
 
         if (hostingType == HostingType.CLOUD) {
             client = new XrayImporterCloudImpl(importInstance.getCredential(build).getUsername(),
-                    importInstance.getCredential(build).getPassword(),
-                    proxyBean);
+                                               importInstance.getCredential(build).getPassword(),
+                                               proxyBean);
         } else if (hostingType == HostingType.SERVER) {
             client = new XrayImporterImpl(importInstance.getServerAddress(),
-                    importInstance.getCredential(build).getUsername(),
-                    importInstance.getCredential(build).getPassword(),
-                    proxyBean);
+                                          importInstance.getCredential(build).getUsername(),
+                                          importInstance.getCredential(build).getPassword(),
+                                          proxyBean);
         } else {
             XrayEnvironmentVariableSetter
                     .failed("Hosting type not recognized.")
@@ -543,12 +553,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                 .setAction(build, listener);
     }
 
-    private UploadResult uploadResults(@Nonnull FilePath workspace,
-                                       @Nonnull TaskListener listener,
-                                       XrayImporter client,
-                                       EnvVars environmentVariables,
-                                       String key,
-                                       FilePath filePath) throws InterruptedException, IOException {
+    private UploadResult uploadResults(
+            @Nonnull FilePath workspace,
+            @Nonnull TaskListener listener,
+            XrayImporter client,
+            EnvVars environmentVariables,
+            String key,
+            FilePath filePath
+    ) throws InterruptedException, IOException {
         UploadResult result = tryUploadResults(workspace, listener, client, filePath, environmentVariables, key);
 
         int tries = 1; // Tries start with 1 because we count the original request as a try.
@@ -561,8 +573,10 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             listener.getLogger().println("Too Many Requests: Waiting " + sleepTimeSeconds + " seconds - try #" + tries);
 
             if (sleepTimeSeconds > MAX_RETRY_AFTER_TIME_SECONDS) { // If the server asks us to wait to much time, we abort the whole import.
-                final String logText = String.format("Too Many Requests: Wait time (%s seconds) exceeds the maximum allowed (%s seconds)",
-                        sleepTimeSeconds, MAX_RETRY_AFTER_TIME_SECONDS);
+                final String logText = String.format(
+                        "Too Many Requests: Wait time (%s seconds) exceeds the maximum allowed (%s seconds)",
+                        sleepTimeSeconds,
+                        MAX_RETRY_AFTER_TIME_SECONDS);
 
                 listener.getLogger().println(logText);
                 throw new XrayJenkinsGenericException(result.getMessage());
@@ -592,12 +606,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
      * @param sameTestExecutionKey The key used when multiple results are imported to the same Test Execution
      * @return the upload results
      */
-    private UploadResult tryUploadResults(FilePath workspace,
-                                          TaskListener listener,
-                                          XrayImporter client,
-                                          FilePath resultsFile,
-                                          EnvVars env,
-                                          @Nullable String sameTestExecutionKey) throws InterruptedException, IOException {
+    private UploadResult tryUploadResults(
+            FilePath workspace,
+            TaskListener listener,
+            XrayImporter client,
+            FilePath resultsFile,
+            EnvVars env,
+            @Nullable String sameTestExecutionKey
+    ) throws InterruptedException, IOException {
         try {
             Endpoint targetEndpoint = lookupForEndpoint();
             Map<com.xpandit.xray.model.QueryParameter, String> queryParams = prepareQueryParam(env);
@@ -616,7 +632,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
             if (StringUtils.isNotBlank(this.importFilePath)) {
                 Content results = new com.xpandit.xray.model.FileStream(resultsFile.getName(), resultsFile.read(),
-                        targetEndpoint.getResultsMediaType());
+                                                                        targetEndpoint.getResultsMediaType());
                 dataParams.put(com.xpandit.xray.model.DataParameter.FILEPATH, results);
 
             }
@@ -627,7 +643,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                 Content info;
                 if (this.inputInfoSwitcher.equals("filePath")) {
                     FilePath infoFile = getFile(workspace, resolved, listener);
-                    info = new com.xpandit.xray.model.FileStream(infoFile.getName(), infoFile.read(), targetEndpoint.getInfoFieldMediaType());
+                    info = new com.xpandit.xray.model.FileStream(infoFile.getName(),
+                                                                 infoFile.read(),
+                                                                 targetEndpoint.getInfoFieldMediaType());
                 } else {
                     info = new com.xpandit.xray.model.StringContent(resolved, targetEndpoint.getInfoFieldMediaType());
                 }
@@ -659,7 +677,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             listener.getLogger().println("Response: (" + result.getStatusCode() + ") " + result.getMessage());
 
             if (result.isOkStatusCode()) {
-                listener.getLogger().println("Successfully imported " + targetEndpoint.getName() + " results from " + resultsFile.getName());
+                listener.getLogger()
+                        .println("Successfully imported " + targetEndpoint.getName() + " results from " + resultsFile.getName());
             }
 
             return result;
@@ -708,16 +727,18 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         for (com.xpandit.xray.model.DataParameter dp : com.xpandit.xray.model.DataParameter.values()) {
             if (dynamicFields.containsKey(dp.getKey()) && dp.isRequired()) {
                 String value = dynamicFields.get(dp.getKey());
-                if (StringUtils.isBlank(value))
+                if (StringUtils.isBlank(value)) {
                     throw FormValidation.error("You must configure the field " + dp.getLabel());
+                }
             }
         }
 
         for (com.xpandit.xray.model.QueryParameter qp : com.xpandit.xray.model.QueryParameter.values()) {
             if (dynamicFields.containsKey(qp.getKey()) && qp.isRequired()) {
                 String value = dynamicFields.get(qp.getKey());
-                if (StringUtils.isBlank(value))
+                if (StringUtils.isBlank(value)) {
                     throw FormValidation.error("You must configure the field " + qp.getLabel());
+                }
             }
         }
 
@@ -779,7 +800,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
         private void validateFormData(JSONObject formData) throws Descriptor.FormException {
             if (StringUtils.isBlank(formData.getString(SERVER_INSTANCE))) {
-                throw new Descriptor.FormException("Xray Results Import Task error, you must provide a valid Jira Instance", SERVER_INSTANCE);
+                throw new Descriptor.FormException(
+                        "Xray Results Import Task error, you must provide a valid Jira Instance",
+                        SERVER_INSTANCE);
             }
         }
 
@@ -792,8 +815,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             for (String key : keys) {
                 if (configuredFields.containsKey(key)) {
                     String value = configuredFields.getString(key);
-                    if (StringUtils.isNotBlank(value))
+                    if (StringUtils.isNotBlank(value)) {
                         dynamicFields.put(key, value);
+                    }
                 }
             }
 
@@ -815,8 +839,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         public ListBoxModel doFillFormatSuffixItems() {
 
             ListBoxModel items = new ListBoxModel();
-            for (Endpoint e : Endpoint.values())
+            for (Endpoint e : Endpoint.values()) {
                 items.add(e.getName(), e.getSuffix());
+            }
 
             return items;
         }
@@ -855,7 +880,9 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         }
 
         public FormValidation doCheckServerInstance() {
-            return ConfigurationUtils.anyAvailableConfiguration() ? FormValidation.ok() : FormValidation.error("No configured Server Instances found");
+            return ConfigurationUtils.anyAvailableConfiguration()
+                    ? FormValidation.ok()
+                    : FormValidation.error("No configured Server Instances found");
         }
 
         public String getCloudHostingTypeName() {

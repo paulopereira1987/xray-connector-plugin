@@ -19,7 +19,6 @@ import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
 import com.xpandit.plugins.xrayjenkins.task.filefilters.OnlyFeatureFilesInPathFilter;
 import com.xpandit.xray.exception.XrayClientCoreGenericException;
-import com.xpandit.xray.model.Content;
 import com.xpandit.xray.model.FileStream;
 import com.xpandit.xray.model.UploadResult;
 import com.xpandit.xray.service.XrayTestImporter;
@@ -45,7 +44,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,13 +51,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static com.xpandit.plugins.xrayjenkins.Utils.EnvironmentVariableUtil.expandVariable;
-
 /**
  * This class is responsible for performing the Xray: Cucumber Features Import Task
  */
 public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep {
-    
+
     private static final String TMP_ZIP_FILENAME = "xray_cucumber_features.zip";
 
     private String serverInstance;
@@ -70,12 +66,14 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     private String preconditions;
 
     @DataBoundConstructor
-    public XrayImportFeatureBuilder(String serverInstance,
-                                    String folderPath,
-                                    String projectKey,
-                                    String lastModified,
-                                    String testInfo,
-                                    String preconditions){
+    public XrayImportFeatureBuilder(
+            String serverInstance,
+            String folderPath,
+            String projectKey,
+            String lastModified,
+            String testInfo,
+            String preconditions
+    ) {
         this.serverInstance = serverInstance;
         this.folderPath = folderPath;
         this.projectKey = projectKey;
@@ -134,10 +132,12 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run,
-                        @Nonnull FilePath workspace,
-                        @Nonnull Launcher launcher,
-                        @Nonnull TaskListener listener) throws IOException, InterruptedException {
+    public void perform(
+            @Nonnull Run<?, ?> run,
+            @Nonnull FilePath workspace,
+            @Nonnull Launcher launcher,
+            @Nonnull TaskListener listener
+    ) throws IOException, InterruptedException {
         XrayInstance xrayInstance = ConfigurationUtils.getConfiguration(this.serverInstance);
 
         listener.getLogger().println("Starting XRAY: Cucumber Features Import Task...");
@@ -146,7 +146,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         listener.getLogger().println("####   Xray is importing the feature files  ####");
         listener.getLogger().println("##########################################################");
 
-        if(xrayInstance == null){
+        if (xrayInstance == null) {
             listener.getLogger().println("The server instance is null");
             addFailedOpEnvironmentVariables(run, "The server instance is null", listener);
             throw new AbortException();
@@ -156,21 +156,23 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             addFailedOpEnvironmentVariables(run, "You must provide the project key", listener);
             throw new AbortException();
         }
-        if(StringUtils.isBlank(this.folderPath)){
+        if (StringUtils.isBlank(this.folderPath)) {
             listener.getLogger().println("You must provide the directory path");
             addFailedOpEnvironmentVariables(run, "You must provide the directory path", listener);
             throw new AbortException();
         }
-        
+
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         XrayTestImporter client;
         if (xrayInstance.getHosting() == HostingType.CLOUD) {
-            client = new XrayTestImporterCloudImpl(xrayInstance.getCredential(run).getUsername(), xrayInstance.getCredential(run).getPassword(), proxyBean);
+            client = new XrayTestImporterCloudImpl(xrayInstance.getCredential(run).getUsername(),
+                                                   xrayInstance.getCredential(run).getPassword(),
+                                                   proxyBean);
         } else if (xrayInstance.getHosting() == null || xrayInstance.getHosting() == HostingType.SERVER) {
             client = new XrayTestImporterImpl(xrayInstance.getServerAddress(),
-                    xrayInstance.getCredential(run).getUsername(),
-                    xrayInstance.getCredential(run).getPassword(),
-                    proxyBean);
+                                              xrayInstance.getCredential(run).getUsername(),
+                                              xrayInstance.getCredential(run).getPassword(),
+                                              proxyBean);
         } else {
             addFailedOpEnvironmentVariables(run, "Hosting type not recognized.", listener);
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
@@ -190,10 +192,13 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             final FilePath workspace,
             final XrayTestImporter client,
             final TaskListener listener,
-            final XrayInstance instance) throws IOException, InterruptedException {
-        
-        try{
-            final Set<String> validFilePaths = FileUtils.getFeatureFileNamesFromWorkspace(workspace, this.folderPath, listener);
+            final XrayInstance instance
+    ) throws IOException, InterruptedException {
+
+        try {
+            final Set<String> validFilePaths = FileUtils.getFeatureFileNamesFromWorkspace(workspace,
+                                                                                          this.folderPath,
+                                                                                          listener);
             final FilePath zipFile = createZipFile(workspace);
             FileStream testInfoFile = null;
             FileStream preconditionsFile = null;
@@ -205,7 +210,9 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             }
 
             validFilePaths.forEach(filePath -> listener.getLogger().println("File found: " + filePath));
-            listener.getLogger().println("Creating zip to import feature files. This may take a while if you have a big number of files.");
+            listener.getLogger()
+                    .println(
+                            "Creating zip to import feature files. This may take a while if you have a big number of files.");
 
             base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
 
@@ -233,7 +240,9 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
             final HostingType hostingType = instance.getHosting() == null ? HostingType.SERVER : instance.getHosting();
             XrayEnvironmentVariableSetter
-                    .parseCucumberFeatureImportResponse(Collections.singleton(uploadResult), hostingType, listener.getLogger())
+                    .parseCucumberFeatureImportResponse(Collections.singleton(uploadResult),
+                                                        hostingType,
+                                                        listener.getLogger())
                     .setAction(run, listener);
 
             // Deletes the Zip File
@@ -250,7 +259,11 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
     }
 
-    private FilePath getFile(FilePath workspace, String filePath, TaskListener listener) throws IOException, InterruptedException {
+    private FilePath getFile(
+            FilePath workspace,
+            String filePath,
+            TaskListener listener
+    ) throws IOException, InterruptedException {
         if (workspace == null) {
             throw new XrayJenkinsGenericException("No workspace in this current node");
         }
@@ -265,7 +278,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         }
         return file;
     }
-    
+
     private void deleteFile(FilePath file, TaskListener listener) throws IOException, InterruptedException {
         try {
             file.delete();
@@ -297,11 +310,11 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         return new FilePath(workspace, TMP_ZIP_FILENAME);
     }
 
-    private void addFailedOpEnvironmentVariables(Run<?,?> run, TaskListener taskListener) {
+    private void addFailedOpEnvironmentVariables(Run<?, ?> run, TaskListener taskListener) {
         addFailedOpEnvironmentVariables(run, null, taskListener);
     }
 
-    private void addFailedOpEnvironmentVariables(Run<?,?> run, String message, TaskListener taskListener) {
+    private void addFailedOpEnvironmentVariables(Run<?, ?> run, String message, TaskListener taskListener) {
         XrayEnvironmentVariableSetter
                 .failed(message)
                 .setAction(run, taskListener);
@@ -321,33 +334,41 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             return BuilderUtils.isSupportedJobType(jobType);
         }
 
-        public List<XrayInstance> getServerInstances(){
+        public List<XrayInstance> getServerInstances() {
             return ServerConfiguration.get().getServerInstances();
         }
 
-        public ListBoxModel doFillServerInstanceItems(){
+        public ListBoxModel doFillServerInstanceItems() {
             return FormUtils.getServerInstanceItems();
         }
 
-        public FormValidation doCheckFolderPath(@QueryParameter String folderPath){
-            return StringUtils.isNotBlank(folderPath) ? FormValidation.ok() : FormValidation.error("You must specify the base directory.");
+        public FormValidation doCheckFolderPath(@QueryParameter String folderPath) {
+            return StringUtils.isNotBlank(folderPath)
+                    ? FormValidation.ok()
+                    : FormValidation.error("You must specify the base directory.");
         }
 
-        public FormValidation doCheckServerInstance(){
-            return ConfigurationUtils.anyAvailableConfiguration() ? FormValidation.ok() : FormValidation.error("No configured Server Instances found");
+        public FormValidation doCheckServerInstance() {
+            return ConfigurationUtils.anyAvailableConfiguration()
+                    ? FormValidation.ok()
+                    : FormValidation.error("No configured Server Instances found");
         }
 
-        public FormValidation doCheckProjectKey(@QueryParameter String projectKey){
-            return StringUtils.isNotBlank(projectKey) ? FormValidation.ok() : FormValidation.error("You must specify the Project key");
+        public FormValidation doCheckProjectKey(@QueryParameter String projectKey) {
+            return StringUtils.isNotBlank(projectKey)
+                    ? FormValidation.ok()
+                    : FormValidation.error("You must specify the Project key");
         }
 
-        public FormValidation doCheckLastModified(@QueryParameter String lastModified){
-            if(StringUtils.isBlank(lastModified)){
+        public FormValidation doCheckLastModified(@QueryParameter String lastModified) {
+            if (StringUtils.isBlank(lastModified)) {
                 return FormValidation.ok();
             }
-            try{
-                return Integer.parseInt(lastModified) > 0 ? FormValidation.ok() : FormValidation.error("The value cannot be negative nor 0");
-            } catch (NumberFormatException e){
+            try {
+                return Integer.parseInt(lastModified) > 0
+                        ? FormValidation.ok()
+                        : FormValidation.error("The value cannot be negative nor 0");
+            } catch (NumberFormatException e) {
                 return FormValidation.error("The value must be a positive integer");
             }
         }
