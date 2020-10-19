@@ -805,6 +805,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             dataParams.values().stream()
                       .map(Content::getContent)
                       .filter(content -> content instanceof AutoCloseable)
+                      .map(AutoCloseable.class::cast)
                       .forEach(content -> closeAutoCloseableInstances(listener, (AutoCloseable) content));
             
             listener.getLogger().println("Response: (" + result.getStatusCode() + ") " + result.getMessage());
