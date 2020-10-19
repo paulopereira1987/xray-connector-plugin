@@ -5,6 +5,7 @@
           {{#case "importInfo" break=true}}{{>addSwitchableField}}{{/case}}
           {{#case "importToSameExecution" break=true}}{{>addSameExecutionCheckboxEntry}}{{/case}}
           {{#case "importInParallel" break=true}}{{>addImportInParallelCheckboxEntry}}{{/case}}
+          {{#case "testImportInfo" break=true}}{{>addSwitchableTestField}}{{/case}}
           {{#default break=true}}{{>addInputEntry}}{{/default}}
       {{/switch}}
   {{/each}}

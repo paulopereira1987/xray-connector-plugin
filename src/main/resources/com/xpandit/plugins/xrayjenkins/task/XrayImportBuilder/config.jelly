@@ -1,21 +1,25 @@
 
 <?jelly escape-by-default='false'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
-         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-         
-  <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>         
-  
-  ${descriptor.setBuildID()}   
- 
-  <!-- Jelly + Handlebars templates spec -->
-  <j:file xmlns:j="jelly:core" var="addInput" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
-  	 	<input name="_.{{key}}" type="text" class="setting-input" value="{{configuration}}"/>
-  </j:file>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
-  <j:file xmlns:j="jelly:core" var="addInputEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
- 		<f:entry title='{{label}}' field='{{key}}'>${addInput}</f:entry>
-  </j:file>
+    <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>
 
+    ${descriptor.setBuildID()}
+
+    <!-- Jelly + Handlebars templates spec -->
+    <j:file xmlns:j="jelly:core" var="addInput" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
+        <input name="_.{{key}}" type="text" class="setting-input" value="{{configuration}}"/>
+    </j:file>
+
+    <j:file xmlns:j="jelly:core" var="addInputEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
+        <f:entry title='{{label}}' field='{{key}}'>${addInput}</f:entry>
+    </j:file>
+
+    <j:file xmlns:j="jelly:core" var="addSameExecutionCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
+        <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing multiple execution report files using a glob expression, the results will be imported to the same Test Execution">
+            <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
+        </f:entry>
+    </j:file>
   <j:file xmlns:j="jelly:core" var="addSameExecutionCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
 	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing multiple execution report files using a glob expression, the results will be imported to the same Test Execution">
 		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
@@ -28,171 +32,289 @@
   	  </f:entry>
   </j:file>
 
-  <j:file xmlns:j="jelly:core" var="addTextarea" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
-  	 	<f:textarea field='{{key}}' value="{{configuration}}" style="width:100%"/>
-  </j:file>  
-  
-  <j:file xmlns:j="jelly:core" var="addTextareaEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
-		<f:entry title='{{label}}'>
-    		${addTextarea}
-		</f:entry>
-  </j:file>
-  
- <j:file xmlns:j="jelly:core" var="addSwitchableField" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
-  		<f:entry title="{{label}}">
-		    <select name="_.inputInfoSwitcher" class="setting-input" id="selectInputType_${descriptor.defaultBuildID()}" onchange='switchInput_${descriptor.defaultBuildID()}("#switchContainer_${descriptor.defaultBuildID()}")'>
-		        <option value='filePath'>${%import-parameter.content-type-filepath}</option>
-		        <option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
-		    </select>
-		</f:entry>
-		<f:entry>
-			<div id="switchContainer_${descriptor.defaultBuildID()}">
-  	 			${addInput}
-  	 		</div>
-  		</f:entry> 
-  </j:file>
-  <!--End of templates spec -->
+    <j:file xmlns:j="jelly:core" var="addTextarea" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
+        <f:textarea field='{{key}}' value="{{configuration}}" style="width:100%"/>
+    </j:file>
 
-  <script id="_${descriptor.defaultBuildID()}">
-    (function(Q){
+    <j:file xmlns:j="jelly:core" var="addTextareaEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
+        <f:entry title='{{label}}'>
+            ${addTextarea}
+        </f:entry>
+    </j:file>
 
-       var mainTemplate = '';
-       var formats;
+    <j:file xmlns:j="jelly:core" var="addSwitchableField" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
+        <f:entry title="{{label}}">
+            <select name="_.inputInfoSwitcher" class="setting-input" id="selectInputType_${descriptor.defaultBuildID()}" onchange='switchInput_${descriptor.defaultBuildID()}("#switchContainer_${descriptor.defaultBuildID()}")'>
+                <option value='filePath'>${%import-parameter.content-type-filepath}</option>
+                <option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
+            </select>
+        </f:entry>
+        <f:entry>
+            <div id="switchContainer_${descriptor.defaultBuildID()}">
+                ${addInput}
+            </div>
+        </f:entry>
+    </j:file>
 
-       if('${instance.defaultFormats()}' != ''){
-		 formats = [${instance.defaultFormats()}];
-		 }
-	   else{
-		 formats = [${descriptor.defaultFormats()}];
-		 }
+    <j:file xmlns:j="jelly:core" var="addSwitchableTestField" omitXmlDeclaration='true' escapeText='false' trim='true'
+    		outputMode='HTML'>
+    	<f:entry title="{{label}}">
+    		<select name="_.inputTestInfoSwitcher" class="setting-input"
+    				id="selectTestInfoInputType_${descriptor.defaultBuildID()}"
+    				onchange='switchTestInfoInput_${descriptor.defaultBuildID()}("#switchTestInfoContainer_${descriptor.defaultBuildID()}")'>
+    			<option value='filePath'>${%import-parameter.content-type-filepath}</option>
+    			<option value='fileContent'>${%import-parameter.content-type-filecontent}</option>
+    		</select>
+    	</f:entry>
+    	<f:entry>
+    		<div id="switchTestInfoContainer_${descriptor.defaultBuildID()}">
+    			${addInput}
+    		</div>
+    	</f:entry>
+    </j:file>
 
-	   formats = formats[0];
+    <!--End of templates spec -->
 
-	   addXrayFields_${descriptor.defaultBuildID()} = function(){
+    <f:entry title="${%Jira Instance}" field="serverInstance">
+        <f:select id="selectInstance_${descriptor.defaultBuildID()}"/>
+    </f:entry>
 
-			var selectedFormat;
-			if(arguments.length > 0)
-				selectedFormat = formats[arguments[0]];
-			else
-				selectedFormat = formats[Object.keys(formats)[0]];
+    <f:entry title="${%Credentials}" field="credentialId">
+        <f:select id="credentialId_${descriptor.defaultBuildID()}"/>
+    </f:entry>
 
-			//Three steps: fetch template, compile it, generate result with the context data
-			var template = Handlebars.compile(mainTemplate);
-			var result = template(selectedFormat);
-	   		Q('#configurableFields_${descriptor.defaultBuildID()}').html(result);
+    <f:entry title="${%Format}" field="formatSuffix">
+        <f:select id="selectFormat_${descriptor.defaultBuildID()}"/>
+    </f:entry>
 
-	   		switcherLastConfiguration_${descriptor.defaultBuildID()}();
-		}
+    <f:section name="dynamicFields">
+        <f:entry title="Parameters">
+            <p id="configurableFields_${descriptor.defaultBuildID()}" style="border-left:solid;border-color:#00a3ac;width:50vw"></p>
+        </f:entry>
+    </f:section>
 
-	  /*
-	   * Switches the HTML element for the importInfo field
-	   */
-	  switchInput_${descriptor.defaultBuildID()} = function(container){
+    <f:entry>
+        <a id="xray-doc-link_${descriptor.defaultBuildID()}" target="_blank">Click here for more details</a>
+    </f:entry>
 
-	    //current selected input type, from the select HTML element
-	  	var selectedInputType = Q("#selectInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
+    <script id="_${descriptor.defaultBuildID()}">
+        (function(Q){
 
-	  	if(!selectedInputType)
-	  		return;
+            var mainTemplate = '';
+            var formats;
 
-	  	var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
+            if('${instance.defaultFormats()}' != ''){
+                formats = [${instance.defaultFormats()}];
+            }
+            else{
+                formats = [${descriptor.defaultFormats()}];
+            }
 
-	  	//selected input type, from last configuration
-		var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
+            formats = formats[0];
 
-		//field to render
-		var _field = (formats[key]).configurableFields.filter(function(field){return field.key == 'importInfo'})[0];
-		_field = JSON.parse(JSON.stringify(_field));
+            addXrayFields_${descriptor.defaultBuildID()} = function(){
 
-		var renderConfiguration = (lastSwitcherConfig == selectedInputType);
+                var selectedFormat;
+                if(arguments.length > 0)
+                    selectedFormat = formats[arguments[0]];
+                else
+                    selectedFormat = formats[Object.keys(formats)[0]];
 
-		if(!renderConfiguration)
-			_field.configuration = '';
+                //Three steps: fetch template, compile it, generate result with the context data
+                var template = Handlebars.compile(mainTemplate);
+                var result = template(selectedFormat);
+                Q('#configurableFields_${descriptor.defaultBuildID()}').html(result);
 
-	  	if(selectedInputType == 'filePath'){// content is a file path
-	  			var template = Handlebars.compile('${addInput}');
-				var result = template(_field);
-		  		Q(container).html(result);
-			}
-		else if(selectedInputType == 'fileContent'){ // content is in JSON format
-			    var template = Handlebars.compile('${addTextarea}');
-				var result = template(_field);
-		  		Q(container).html(result);
-				//prettify();
-		}
+                switcherInfoLastConfiguration_${descriptor.defaultBuildID()}();
+                switcherTestInfoLastConfiguration_${descriptor.defaultBuildID()}();
+            }
 
-	  }
+            /*
+             * Switches the HTML element for the importInfo field
+             */
+            switchInput_${descriptor.defaultBuildID()} = function(container){
 
-	  switcherLastConfiguration_${descriptor.defaultBuildID()} = function(){
-		//selected input type, from last configuration
-		var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
+                //current selected input type, from the select HTML element
+                var selectedInputType = Q("#selectInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
 
-		if(lastSwitcherConfig !== '' ){//making sure the switcher gets the last configuration value
-			var select = Q("#selectInputType_${descriptor.defaultBuildID()}");
-			if(select){
-				select.val(lastSwitcherConfig);
-				select.trigger('change');
-			}
-		}
+                if(!selectedInputType){
+                    console.error("Couldn't find Test Execution fields selected option element");
+                    return;
+                }
 
-	  }
+                var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
 
-	  setDocLink_${descriptor.defaultBuildID()} = function(link){
-	      Q('#xray-doc-link_${descriptor.defaultBuildID()}').attr('href', link);
-	  };
+                //selected input type, from last configuration
+                var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
 
-	  changeDocLink_${descriptor.defaultBuildID()} = function(){
-	      var instanceId = Q('#selectInstance_${descriptor.defaultBuildID()}')[0].value;
+                //field to render
+                var _field = (formats[key]).configurableFields.filter(function(field){return field.key == 'importInfo'})[0];
+                _field = JSON.parse(JSON.stringify(_field));
 
-	      if(instanceId.startsWith('${descriptor.getCloudHostingTypeName()}')) {
-	          setDocLink_${descriptor.defaultBuildID()}('${descriptor.getCloudDocUrl()}');
-	      } else{
-	         setDocLink_${descriptor.defaultBuildID()}('${descriptor.getServerDocUrl()}');
-	      }
+                var renderConfiguration = (lastSwitcherConfig == selectedInputType);
 
-	  };
+                if(!renderConfiguration)
+                    _field.configuration = '';
 
-	  filterFormats_${descriptor.defaultBuildID()} = function(){
-	      var instanceId = Q('#selectInstance_${descriptor.defaultBuildID()}')[0].value;
-	      var cloudExclusiveEndpoints = JSON.parse('${descriptor.getExclusiveCloudEndpoints()}');
-	      var serverExclusiveEndpoints = JSON.parse('${descriptor.getExclusiveServerEndpoints()}');
-          var selectedInstanceIsServer = instanceId.startsWith('${descriptor.getServerHostingTypeName()}');
-		  var selectedFormat = Q('#selectFormat_${descriptor.defaultBuildID()} option:selected').val();
+                if(selectedInputType == 'filePath'){// content is a file path
+                    var template = Handlebars.compile('${addInput}');
+                    var result = template(_field);
+                    Q(container).html(result);
+                }
+                else if(selectedInputType == 'fileContent'){ // content is in JSON format
+                    var template = Handlebars.compile('${addTextarea}');
+                    var result = template(_field);
+                    Q(container).html(result);
+                }
 
-          Q('#selectFormat_${descriptor.defaultBuildID()} option').prop("disabled", false);
-          if (selectedInstanceIsServer) {
-			  for (var index in cloudExclusiveEndpoints){
-				  Q('#selectFormat_${descriptor.defaultBuildID()} option[value="'+ cloudExclusiveEndpoints[index] +'"]')
-						  .prop("disabled", true);
-			  }
-			  
-              if(cloudExclusiveEndpoints.hasOwnProperty(selectedFormat)){
-                  // if "Server" is selected and the current selected format is a cloudExclusive, then we reset to the sdefault (first) option.
-                  Q('#selectFormat_${descriptor.defaultBuildID()}').val("");
-                  addXrayFields_${descriptor.defaultBuildID()}("");
-              }
-		  } else {
-			  for (var index in serverExclusiveEndpoints){
-				  Q('#selectFormat_${descriptor.defaultBuildID()} option[value="'+ serverExclusiveEndpoints[index] +'"]')
-						  .prop("disabled", true);
-			  }
+            }
 
-              if(serverExclusiveEndpoints.hasOwnProperty(selectedFormat)){
-                  // if "Cloud" is selected and the current selected format is a serverExclusive, then we reset to the default (first) option.
-                  Q('#selectFormat_${descriptor.defaultBuildID()}').val("");
-                  addXrayFields_${descriptor.defaultBuildID()}("");
-              }
-		  }
-	  };
+            switchTestInfoInput_${descriptor.defaultBuildID()} = function (container) {
+            	//current selected input type, from the select HTML element
+            	var selectTestInfoInputType = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}").find('option:selected').val();
 
-	  Q(document).ready(function() {
-	  		// Main template loading. It's syntax conflicts with Jelly so we need to load it asynchronously from an external source
-			Q.ajax({
-		   	 url: '${resURL}/plugin/xray-connector/xray-import-buildstepconfig.html',
-		     cache: false,
-		     dataType: "html",
-		     success: function(data) {
-		     	mainTemplate = data;
+            	if(!selectTestInfoInputType){
+            	    console.error("Couldn't find Test Info selected option element");
+            	    return;
+            	}
+
+            	var key = Q("#selectFormat_${descriptor.defaultBuildID()}").find('option:selected').val();
+
+            	//selected input type, from last configuration
+            	var lastSwitcherConfig = '${instance.getInputTestInfoSwitcher()}';
+
+            	//field to render
+            	var _field = (formats[key]).configurableFields.filter(function (field) {
+            		return field.key == 'testImportInfo'
+            	})[0];
+            	_field = JSON.parse(JSON.stringify(_field));
+
+            	var renderConfiguration = (lastSwitcherConfig === selectTestInfoInputType);
+
+            	if (!renderConfiguration){
+            		_field.configuration = '';
+            	}
+
+            	if (selectTestInfoInputType === 'filePath') {// content is a file path
+            		var template = Handlebars.compile('${addInput}');
+            		var result = template(_field);
+            		Q(container).html(result);
+            	} else if (selectTestInfoInputType == 'fileContent') { // content is in JSON format
+            		var template = Handlebars.compile('${addTextarea}');
+            		var result = template(_field);
+            		Q(container).html(result);
+            	}
+
+            }
+
+            switcherInfoLastConfiguration_${descriptor.defaultBuildID()} = function(){
+                //selected input type, from last configuration
+                var lastSwitcherConfig = '${instance.getInputInfoSwitcher()}';
+
+                if(lastSwitcherConfig !== '' ){//making sure the switcher gets the last configuration value
+                    var select = Q("#selectInputType_${descriptor.defaultBuildID()}");
+                    if(select){
+                        select.val(lastSwitcherConfig);
+                        select.trigger('change');
+                    }
+                }
+            }
+
+            switcherTestInfoLastConfiguration_${descriptor.defaultBuildID()} = function(){
+          	    //selected input type, from last configuration
+          	    var lastSwitcherConfig = '${instance.getInputTestInfoSwitcher()}';
+
+          	    if(lastSwitcherConfig){//making sure the switcher gets the last configuration value
+          	    	var select = Q("#selectTestInfoInputType_${descriptor.defaultBuildID()}");
+          	    	if(select.length > 0){
+          	    		select.val(lastSwitcherConfig);
+          	    		select.trigger('change');
+          	    	}
+          	    }
+            }
+
+            setDocLink_${descriptor.defaultBuildID()} = function(link){
+                Q('#xray-doc-link_${descriptor.defaultBuildID()}').attr('href', link);
+            };
+
+            changeDocLink_${descriptor.defaultBuildID()} = function(){
+                var instanceId = Q('#selectInstance_${descriptor.defaultBuildID()}')[0].value;
+
+                if(instanceId.startsWith('${descriptor.getCloudHostingTypeName()}')) {
+                    setDocLink_${descriptor.defaultBuildID()}('${descriptor.getCloudDocUrl()}');
+                } else{
+                    setDocLink_${descriptor.defaultBuildID()}('${descriptor.getServerDocUrl()}');
+                }
+
+            };
+
+            filterFormats_${descriptor.defaultBuildID()} = function(){
+                var instanceId = Q('#selectInstance_${descriptor.defaultBuildID()}')[0].value;
+                var cloudExclusiveEndpoints = JSON.parse('${descriptor.getExclusiveCloudEndpoints()}');
+                var serverExclusiveEndpoints = JSON.parse('${descriptor.getExclusiveServerEndpoints()}');
+                var selectedInstanceIsServer = instanceId.startsWith('${descriptor.getServerHostingTypeName()}');
+                var selectedFormat = Q('#selectFormat_${descriptor.defaultBuildID()} option:selected').val();
+
+                Q('#selectFormat_${descriptor.defaultBuildID()} option').prop("disabled", false);
+                if (selectedInstanceIsServer) {
+                    for (var index in cloudExclusiveEndpoints){
+                        Q('#selectFormat_${descriptor.defaultBuildID()} option[value="'+ cloudExclusiveEndpoints[index] +'"]')
+                                .prop("disabled", true);
+                    }
+
+                    if(cloudExclusiveEndpoints.hasOwnProperty(selectedFormat)){
+                        // if "Server" is selected and the current selected format is a cloudExclusive, then we reset to the sdefault (first) option.
+                        Q('#selectFormat_${descriptor.defaultBuildID()}').val("");
+                        addXrayFields_${descriptor.defaultBuildID()}("");
+                    }
+                } else {
+                    for (var index in serverExclusiveEndpoints){
+                        Q('#selectFormat_${descriptor.defaultBuildID()} option[value="'+ serverExclusiveEndpoints[index] +'"]')
+                                .prop("disabled", true);
+                    }
+
+                    if(serverExclusiveEndpoints.hasOwnProperty(selectedFormat)){
+                        // if "Cloud" is selected and the current selected format is a serverExclusive, then we reset to the default (first) option.
+                        Q('#selectFormat_${descriptor.defaultBuildID()}').val("");
+                        addXrayFields_${descriptor.defaultBuildID()}("");
+                    }
+                }
+            };
+
+            toggleCredentials_${descriptor.defaultBuildID()} = function (changeEvent) {
+                var isUserAuthJiraInstance;
+                if (changeEvent) {
+                    isUserAuthJiraInstance = changeEvent.target &amp;&amp;
+                            Q(changeEvent.target)
+                                    .find('option:selected')
+                                    .text()
+                                    .indexOf("[User Auth required] ") === 0;
+                } else {
+                    isUserAuthJiraInstance = Q('#selectInstance_${descriptor.defaultBuildID()}')
+                            .find('option:selected')
+                            .text()
+                            .indexOf("[User Auth required] ") === 0;
+                }
+
+                const $selectParent = Q('#credentialId_${descriptor.defaultBuildID()}')
+                        .parent()
+                        .parent();
+
+                if (isUserAuthJiraInstance) {
+                    $selectParent.show();
+                } else {
+                    $selectParent.hide();
+                }
+            };
+
+            Q(document).ready(function() {
+                // Main template loading. It's syntax conflicts with Jelly so we need to load it asynchronously from an external source
+                Q.ajax({
+                    url: '${resURL}/plugin/xray-connector/xray-import-buildstepconfig.html',
+                    cache: false,
+                    dataType: "html",
+                    success: function(data) {
+                        mainTemplate = data;
 
 		     	//Handlebars is a kind of 'logic-less' like mustache, so it does not provide the equals operator
 		    	Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
@@ -228,73 +350,69 @@
                         return options.fn(this);
                     }
                 });
+                        //Handlebars is a kind of 'logic-less' like mustache, so it does not provide the equals operator
+                        Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
+                            return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+                        });
 
-				//Register partial templates, used for call templates inside templates
-				Handlebars.registerPartial("addInputEntry",'${addInputEntry}');
-				Handlebars.registerPartial("addInput",'${addInput}');
+                        //Register partial templates, used for call templates inside templates
+                        Handlebars.registerPartial("addInputEntry",'${addInputEntry}');
+                        Handlebars.registerPartial("addInput",'${addInput}');
 
-				Handlebars.registerPartial("addTextareaEntry",'${addTextareaEntry}');
-				Handlebars.registerPartial("addTextarea", '${addTextarea}');
+                        Handlebars.registerPartial("addTextareaEntry",'${addTextareaEntry}');
+                        Handlebars.registerPartial("addTextarea", '${addTextarea}');
 
 				Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
 				Handlebars.registerPartial("addImportInParallelCheckboxEntry",'${addImportInParallelCheckboxEntry}');
+                        Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
 
-				Handlebars.registerPartial("addSwitchableField", '${addSwitchableField}');
+                        Handlebars.registerPartial("addSwitchableField", '${addSwitchableField}');
 
-				//get last chosen format
-				var formatSuffix = '${instance.getFormatSuffix()}';
+                        Handlebars.registerPartial("addSwitchableTestField", '${addSwitchableTestField}');
 
-				//if no format was chosen, select the first one from the formats/endpoints list
-				if(!formatSuffix) {
-					addXrayFields_${descriptor.defaultBuildID()}();
-				}else {
-				    addXrayFields_${descriptor.defaultBuildID()}(formatSuffix); //making sure that the select gets the last configuration value
-				}
+                        //get last chosen format
+                        var formatSuffix = '${instance.getFormatSuffix()}';
 
-				changeDocLink_${descriptor.defaultBuildID()}();
+                        //if no format was chosen, select the first one from the formats/endpoints list
+                        if(!formatSuffix) {
+                            addXrayFields_${descriptor.defaultBuildID()}();
+                        }else {
+                            addXrayFields_${descriptor.defaultBuildID()}(formatSuffix); //making sure that the select gets the last configuration value
+                        }
 
-				//register event-handler
-				Q('#selectInstance_${descriptor.defaultBuildID()}').on('change',function(e){
-				       //whenever we select an instance we need to filter the format options and change the doc link
-                       filterFormats_${descriptor.defaultBuildID()}();
-                       changeDocLink_${descriptor.defaultBuildID()}();
+                        changeDocLink_${descriptor.defaultBuildID()}();
+                        toggleCredentials_${descriptor.defaultBuildID()}();
+
+                        //register event-handler
+                        Q('#selectInstance_${descriptor.defaultBuildID()}').on('change',function(e){
+                            //whenever we select an instance we need to filter the format options and change the doc link
+                            filterFormats_${descriptor.defaultBuildID()}();
+                            changeDocLink_${descriptor.defaultBuildID()}();
+                            toggleCredentials_${descriptor.defaultBuildID()}(e);
+                        });
+
+                        Q('#selectFormat_${descriptor.defaultBuildID()}').on('change',function(e){
+                            //whenever we select a format we need to render its specific fields
+                            addXrayFields_${descriptor.defaultBuildID()}(e.currentTarget.options[e.currentTarget.selectedIndex].value);
+                        });
+
+                        Q('#selectFormat_${descriptor.defaultBuildID()}').on('filled', function(){
+                            //when ListBoxModel gets filled, we need to filter the format options
+                            filterFormats_${descriptor.defaultBuildID()}();
+                        });
+
+                    }
                 });
 
-                Q('#selectFormat_${descriptor.defaultBuildID()}').on('change',function(e){
-                    //whenever we select a format we need to render its specific fields
-                    addXrayFields_${descriptor.defaultBuildID()}(e.currentTarget.options[e.currentTarget.selectedIndex].value);
-                });
+            });
 
-                Q('#selectFormat_${descriptor.defaultBuildID()}').on('filled', function(){
-                     //when ListBoxModel gets filled, we need to filter the format options
-                     filterFormats_${descriptor.defaultBuildID()}();
-                });
+            setTimeout(function() {
+                changeDocLink_${descriptor.defaultBuildID()}();
+                toggleCredentials_${descriptor.defaultBuildID()}();
+            }, 500);
+        })(jQuery);
 
-		     }
-			});
-
-	 });
-
-   	})(jQuery);
-
-</script>
-	<f:entry title="${%Jira Instance}" field="serverInstance">
-   		<f:select id="selectInstance_${descriptor.defaultBuildID()}"/>
-	</f:entry>
-
-   <f:entry title="${%Format}" field="formatSuffix">
-   		<f:select id="selectFormat_${descriptor.defaultBuildID()}"/>
-   </f:entry>
-
-	<f:section name="dynamicFields">
-		<f:entry title="Parameters">
-			<p id="configurableFields_${descriptor.defaultBuildID()}" style="border-left:solid;border-color:#00a3ac;width:50vw"></p>
-		</f:entry>
-	</f:section>
-
-   <f:entry>
-	   <a id="xray-doc-link_${descriptor.defaultBuildID()}" target="_blank">Click here for more details</a>
-   </f:entry>
+    </script>
 
 </j:jelly>
 
