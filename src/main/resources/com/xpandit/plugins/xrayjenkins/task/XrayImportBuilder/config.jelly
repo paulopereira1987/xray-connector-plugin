@@ -3,6 +3,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
     <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>
+    <script src="${resURL}/plugin/xray-connector/helpers/register-helpers.js"></script>
 
     ${descriptor.setBuildID()}
 
@@ -20,6 +21,17 @@
             <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
         </f:entry>
     </j:file>
+  <j:file xmlns:j="jelly:core" var="addSameExecutionCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
+	  <f:entry field="importToSameExecution" title="Import to Same Test Execution" description="When this option is check, if you are importing multiple execution report files using a glob expression, the results will be imported to the same Test Execution">
+		  <f:checkbox name="importToSameExecution" id="same-execution-checkbox" checked="${instance.isImportToSameExecution()}"/>
+	  </f:entry>
+  </j:file>
+  
+  <j:file xmlns:j="jelly:core" var="addImportInParallelCheckboxEntry" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='HTML'>
+  	  <f:entry field="importInParallel" title="Import in parallel" description="Import all results files in parallel, using all available CPU cores.">
+  		  <f:checkbox name="importInParallel" id="import-in-parallel-checkbox" checked="${instance.isImportInParallel()}"/>
+  	  </f:entry>
+  </j:file>
 
     <j:file xmlns:j="jelly:core" var="addTextarea" omitXmlDeclaration='true' escapeText='false' trim='true' outputMode='XML'>
         <f:textarea field='{{key}}' value="{{configuration}}" style="width:100%"/>
@@ -304,12 +316,7 @@
                     dataType: "html",
                     success: function(data) {
                         mainTemplate = data;
-
-                        //Handlebars is a kind of 'logic-less' like mustache, so it does not provide the equals operator
-                        Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
-                            return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
-                        });
-
+				        registerHelpers(Handlebars);
                         //Register partial templates, used for call templates inside templates
                         Handlebars.registerPartial("addInputEntry",'${addInputEntry}');
                         Handlebars.registerPartial("addInput",'${addInput}');
@@ -317,6 +324,8 @@
                         Handlebars.registerPartial("addTextareaEntry",'${addTextareaEntry}');
                         Handlebars.registerPartial("addTextarea", '${addTextarea}');
 
+				        Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
+				        Handlebars.registerPartial("addImportInParallelCheckboxEntry",'${addImportInParallelCheckboxEntry}');
                         Handlebars.registerPartial("addSameExecutionCheckboxEntry",'${addSameExecutionCheckboxEntry}');
 
                         Handlebars.registerPartial("addSwitchableField", '${addSwitchableField}');

@@ -9,6 +9,7 @@ package com.xpandit.plugins.xrayjenkins.task;
 
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
@@ -220,6 +221,7 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             
             InputStream file = client.downloadFeatures(expandedIssues, expandedFilter,"true");
             this.unzipFeatures(listener, workspace, expandedFilePath, file);
+            FileUtils.closeSilently(file);
             
             listener.getLogger().println("Successfully exported the Cucumber features");
 

@@ -1,3 +1,4 @@
+
 /**
  * XP.RAVEN Project
  * <p>
@@ -51,6 +52,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
@@ -71,6 +73,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfiguration;
 import static com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils.getConfigurationOrFirstAvailable;
@@ -102,6 +105,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private static Gson gson = new GsonBuilder().create();
 
     private static final String SAME_EXECUTION_CHECKBOX = "importToSameExecution";
+    private static final String IMPORT_IN_PARALLEL = "importInParallel";
     private static final String INPUT_INFO_SWITCHER = "inputInfoSwitcher";
     private static final String TEST_INFO_INPUT_SWITCHER = "inputTestInfoSwitcher";
     private static final String SERVER_INSTANCE = "serverInstance";
@@ -138,6 +142,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
     private String importInfo;
     private String testImportInfo;
     private String importToSameExecution;
+    private String importInParallel;
     private String credentialId;
 
 
@@ -204,7 +209,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             String inputInfoSwitcher,
             String inputTestInfoSwitcher,
             String importToSameExecution,
-            @Nullable String credentialId
+            @Nullable String credentialId,
+            String importInParallel
     ) {
         this.serverInstance = serverInstance;
         this.endpointName = endpointName;
@@ -223,6 +229,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         this.inputInfoSwitcher = inputInfoSwitcher;
         this.inputTestInfoSwitcher = inputTestInfoSwitcher;
         this.importToSameExecution = importToSameExecution;
+        this.importInParallel = importInParallel;
 
         /**
          * Compatibility assigns - when creating the job, the config file must be prepared to run on pré-1.3.0 version
@@ -377,6 +384,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         this.importToSameExecution = importToSameExecution;
     }
 
+    public String getImportInParallel() {
+        return importInParallel;
+    }
+
+    public void setImportInParallel(String importInParallel) {
+        this.importInParallel = importInParallel;
+    }
+
     public String getCredentialId() {
         return this.credentialId;
     }
@@ -419,6 +434,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                 bean.setFieldsConfiguration(getDynamicFieldsMap());
             }
             addImportToSameExecField(e, bean);
+            addImportInParallel(bean);
         }
         return gson.toJson(formats);
     }
@@ -440,8 +456,13 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             ParameterBean pb = new ParameterBean(SAME_EXECUTION_CHECKBOX, "same exec text box", false);
             pb.setConfiguration(importToSameExecution);
             bean.getConfigurableFields().add(0, pb);
-
         }
+    }
+
+    private void addImportInParallel(FormatBean bean) {
+        ParameterBean importInParallelpb = new ParameterBean(IMPORT_IN_PARALLEL, "import in parallel text box", false);
+        importInParallelpb.setConfiguration(importInParallel);
+        bean.getConfigurableFields().add(importInParallelpb);
     }
 
     private FilePath getFile(
@@ -535,43 +556,15 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         Endpoint endpointValue = Endpoint.lookupBySuffix(this.endpointName);
 
         final List<UploadResult> uploadResults = new ArrayList<>();
-
+        
         if (BuilderUtils.isGlobExpressionsSupported(endpointValue)) {
-            ObjectMapper mapper = new ObjectMapper();
-            String key = null;
-            for (FilePath fp : FileUtils.getFiles(workspace, resolved, listener, launcher.getChannel())) {
-                UploadResult result = uploadResults(workspace, listener, client, env, key, fp);
-
-                uploadResults.add(result);
-
-                if (key == null && "true".equals(importToSameExecution)) {
-                    HostingType instanceType = importInstance.getHosting();
-
-                    if (instanceType == HostingType.SERVER) {
-
-                        Map<String, Object> resultMap = mapper.readValue(result.getMessage(), Map.class);
-                        if (MapUtils.isNotEmpty(resultMap)) {
-                            Map<String, String> testExecIssue = (Map<String, String>) resultMap.get("testExecIssue");
-                            if (MapUtils.isNotEmpty(testExecIssue)) {
-                                key = testExecIssue.get("key");
-                            }
-                        }
-                    } else if (instanceType == HostingType.CLOUD) {
-
-                        Map<String, String> map = mapper.readValue(result.getMessage(), Map.class);
-                        key = map.get("key");
-                    } else {
-                        throw new XrayJenkinsGenericException("Instance type not found.");
-                    }
-
-                    if (key == null) {
-                        XrayEnvironmentVariableSetter
-                                .failed("No Test Execution Key returned")
-                                .setAction(build, listener);
-                        throw new XrayJenkinsGenericException("No Test Execution Key returned");
-                    }
-                }
+            List<FilePath> files = FileUtils.getFiles(workspace, resolved, listener, launcher.getChannel());
+            if ("true".equals(importInParallel) && CollectionUtils.isNotEmpty(files) && files.size() > 1) {
+                importResultsInParallel(build, workspace, listener, importInstance, client, env, uploadResults, files);
+            } else {
+                importResultsSequential(build, workspace, listener, importInstance, client, env, uploadResults, files);
             }
+            
         } else {
             FilePath file = getFile(workspace, resolved, listener);
             uploadResults.add(tryUploadResults(workspace, listener, client, file, env, null));
@@ -581,6 +574,112 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
         XrayEnvironmentVariableSetter
                 .parseResultImportResponse(uploadResults, hostingType, listener.getLogger())
                 .setAction(build, listener);
+    }
+
+    private void importResultsSequential(
+            Run<?, ?> build,
+            FilePath workspace,
+            TaskListener listener,
+            XrayInstance importInstance,
+            XrayImporter client,
+            EnvVars env,
+            List<UploadResult> uploadResults,
+            List<FilePath> files
+    ) throws IOException, InterruptedException {
+        String key = null;
+        if (CollectionUtils.isEmpty(files)) {
+            return;
+        }
+        for (FilePath fp : files) {
+            UploadResult result = uploadResults(workspace, listener, client, env, key, fp);
+            uploadResults.add(result);
+            if (key == null && "true".equals(importToSameExecution)) {
+                key = getTestExecutionKeyFromResponse(build, listener, importInstance, result);
+            }
+        }
+    }
+
+    private void importResultsInParallel(
+            Run<?, ?> build,
+            FilePath workspace,
+            TaskListener listener,
+            XrayInstance importInstance,
+            XrayImporter client,
+            EnvVars env,
+            List<UploadResult> uploadResults,
+            List<FilePath> files
+    ) throws InterruptedException, IOException {
+
+        String key = null;
+
+        if ("true".equals(importToSameExecution) && CollectionUtils.isNotEmpty(files)) {
+            // When import to same test execution we need to do a first import to get the Test Execution Key
+            FilePath file1 = files.get(0);
+            UploadResult result = uploadResults(workspace, listener, client, env, null, file1);
+            uploadResults.add(result);
+            // We remove the file to not import it again below.
+            files.remove(0);
+            key = getTestExecutionKeyFromResponse(build, listener, importInstance, result);
+        }
+
+        final String finalKey = key;
+        List<UploadResult> results = files
+                .parallelStream()
+                .map(file -> getUploadResultImportInParallel(workspace, listener, client, env, finalKey, file))
+                .collect(Collectors.toList());
+        
+        uploadResults.addAll(results);
+    }
+    
+    private UploadResult getUploadResultImportInParallel(
+            FilePath workspace,
+            TaskListener listener,
+            XrayImporter client,
+            EnvVars env,
+            String finalKey,
+            FilePath filePath
+    ) {
+        try {
+            return uploadResults(workspace, listener, client, env, finalKey, filePath);
+        } catch (InterruptedException | IOException e) {
+            throw new XrayJenkinsGenericException(e);
+        }
+    }
+
+    private String getTestExecutionKeyFromResponse(
+            Run<?, ?> build,
+            TaskListener listener,
+            XrayInstance importInstance,
+            UploadResult result
+    ) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String key = null;
+        HostingType instanceType = importInstance.getHosting();
+
+        if (instanceType == HostingType.SERVER) {
+
+            Map<String, Object> resultMap = mapper.readValue(result.getMessage(), Map.class);
+            if (MapUtils.isNotEmpty(resultMap)) {
+                Map<String, String> testExecIssue = (Map<String, String>) resultMap.get("testExecIssue");
+                if (MapUtils.isNotEmpty(testExecIssue)) {
+                    key = testExecIssue.get("key");
+                }
+            }
+        } else if (instanceType == HostingType.CLOUD) {
+
+            Map<String, String> map = mapper.readValue(result.getMessage(), Map.class);
+            key = map.get("key");
+        } else {
+            throw new XrayJenkinsGenericException("Instance type not found.");
+        }
+
+        if (key == null) {
+            XrayEnvironmentVariableSetter
+                    .failed("No Test Execution Key returned")
+                    .setAction(build, listener);
+            throw new XrayJenkinsGenericException("No Test Execution Key returned");
+        }
+        return key;
     }
 
     private UploadResult uploadResults(
@@ -701,9 +800,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             }
 
             listener.getLogger().println("Starting to import results from " + resultsFile.getName());
-
             UploadResult result = client.uploadResults(targetEndpoint, dataParams, queryParams);
-
+            
+            dataParams.values().stream()
+                      .map(Content::getContent)
+                      .filter(content -> content instanceof AutoCloseable)
+                      .map(AutoCloseable.class::cast)
+                      .forEach(content -> closeAutoCloseableInstances(listener, (AutoCloseable) content));
+            
             listener.getLogger().println("Response: (" + result.getStatusCode() + ") " + result.getMessage());
 
             if (result.isOkStatusCode()) {
@@ -720,6 +824,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             LOG.error(ERROR_LOG, e);
             listener.error(e.getMessage());
             throw new IOException(e);
+        }
+    }
+
+    private void closeAutoCloseableInstances(TaskListener listener, AutoCloseable autoCloseable) {
+        try {
+            autoCloseable.close();
+        } catch (Exception e) {
+            listener.getLogger().println("Error closing autocloseable instance " + e);
         }
     }
 
@@ -829,7 +941,8 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                     fields.get(INPUT_INFO_SWITCHER),
                     fields.get(TEST_INFO_INPUT_SWITCHER),
                     fields.get(SAME_EXECUTION_CHECKBOX),
-                    credentialId);
+                    credentialId,
+                    fields.get(IMPORT_IN_PARALLEL));
         }
 
         private void validateFormData(JSONObject formData) throws Descriptor.FormException {
@@ -910,6 +1023,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             for (Endpoint e : Endpoint.values()) {
                 FormatBean bean = e.toBean();
                 addImportToSameExecField(e, bean);
+                addImportInParallel(bean);
                 formats.put(e.getSuffix(), bean);
             }
             return gson.toJson(formats);
@@ -920,6 +1034,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                 ParameterBean pb = new ParameterBean(SAME_EXECUTION_CHECKBOX, "same exec text box", false);
                 bean.getConfigurableFields().add(0, pb);
             }
+        }
+
+        private void addImportInParallel(FormatBean bean) {
+            ParameterBean pb = new ParameterBean(IMPORT_IN_PARALLEL, "import in parallel text box", false);
+            bean.getConfigurableFields().add(pb);
         }
 
         public List<XrayInstance> getServerInstances() {

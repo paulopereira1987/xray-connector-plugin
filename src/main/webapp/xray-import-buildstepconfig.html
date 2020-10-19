@@ -1,19 +1,11 @@
   <!--Renders an HTML element for each additional field-->
 
   {{#each configurableFields}}
-		{{#ifEquals key "importInfo"}}
-			{{>addSwitchableField}}
-		{{else}}
-  			{{#ifEquals key "testImportInfo"}}
-  				{{>addSwitchableTestField}}
-            {{else}}
-				{{#ifEquals key "importToSameExecution"}}
-					{{>addSameExecutionCheckboxEntry}}
-				{{else}}
-					{{>addInputEntry}}
-				{{/ifEquals}}
-  			{{/ifEquals}}
-		{{/ifEquals}}
+      {{#switch key}}
+          {{#case "importInfo" break=true}}{{>addSwitchableField}}{{/case}}
+          {{#case "importToSameExecution" break=true}}{{>addSameExecutionCheckboxEntry}}{{/case}}
+          {{#case "importInParallel" break=true}}{{>addImportInParallelCheckboxEntry}}{{/case}}
+          {{#case "testImportInfo" break=true}}{{>addSwitchableTestField}}{{/case}}
+          {{#default break=true}}{{>addInputEntry}}{{/default}}
+      {{/switch}}
   {{/each}}
-
-  
