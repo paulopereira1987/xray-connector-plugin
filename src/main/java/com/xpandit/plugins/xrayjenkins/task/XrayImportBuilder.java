@@ -786,7 +786,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
                 String resolvedTestImportInfo = expandVariable(env, this.testImportInfo);
 
                 Content testInfo;
-                if (this.inputInfoSwitcher.equals("filePath")) {
+                if (this.inputTestInfoSwitcher.equals("filePath")) {
                     FilePath testInfoFile = getFile(workspace, resolvedTestImportInfo, listener);
                     testInfo = new com.xpandit.xray.model.FileStream(testInfoFile.getName(),
                                                                      testInfoFile.read(),
