@@ -9,9 +9,7 @@ package com.xpandit.plugins.xrayjenkins.model;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.xray.service.impl.XrayClientImpl;
 import com.xpandit.xray.service.impl.XrayCloudClientImpl;
@@ -19,17 +17,11 @@ import com.xpandit.xray.service.impl.bean.ConnectionResult;
 import com.xpandit.xray.service.impl.delegates.HttpRequestProvider;
 import hudson.Extension;
 import hudson.model.Item;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.Nullable;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
@@ -37,7 +29,13 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
 
 @Extension
 public class ServerConfiguration extends GlobalConfiguration {
@@ -83,15 +81,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 	}
 
     public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
-        
-        final StandardListBoxModel result = new StandardListBoxModel();
-
-        final List<StandardUsernamePasswordCredentials> credentials = getAllCredentials(item);
-
-        for (StandardUsernamePasswordCredentials credential : credentials) {
-            result.with(credential);
-        }
-        return result.includeCurrentValue(credentialId);
+        return getAllCredentialsListBoxModel(item, credentialId);
     }
 
     public FormValidation doCheckCredentialId(
@@ -106,7 +96,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         }
             
         if (StringUtils.isBlank(value)) {
-            return FormValidation.error("Authentication not filled!");
+            return FormValidation.warning("Leave the credentials field empty if you want to pick user scoped credentials for each Build Task.");
         }
         
         if (!credentialExists(item, value)) {
@@ -122,7 +112,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         if (StringUtils.isBlank(credentialId)) {
-            return FormValidation.error("Authentication not filled!");
+            return FormValidation.error("Authentication is optional, however it is required in order to test the connection.");
         }
 
         if (StringUtils.isBlank(hosting)) {
@@ -172,19 +162,6 @@ public class ServerConfiguration extends GlobalConfiguration {
                 instance.setHosting(HostingType.getDefaultType());
             }
         }
-    }
-
-    private List<StandardUsernamePasswordCredentials> getAllCredentials(@Nullable final Item item) {
-        final List<StandardUsernamePasswordCredentials> credentials = CredentialsProvider.lookupCredentials(
-                StandardUsernamePasswordCredentials.class,
-                item,
-                ACL.SYSTEM,
-                Collections.<DomainRequirement>emptyList());
-        
-        if (CollectionUtils.isEmpty(credentials)) {
-            return Collections.emptyList();
-        }
-        return credentials;
     }
     
     @Nullable

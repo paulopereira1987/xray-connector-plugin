@@ -3,11 +3,17 @@ package com.xpandit.plugins.xrayjenkins.model;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil;
+import hudson.model.Cause;
 import hudson.model.Run;
+import hudson.model.User;
 import hudson.util.Secret;
-import java.util.List;
-import javax.annotation.Nullable;
+import org.acegisecurity.Authentication;
 import org.apache.commons.lang.StringUtils;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Optional;
 
 public class CredentialResolver {
     private final String credentialId;
@@ -16,7 +22,7 @@ public class CredentialResolver {
     private String username = null;
     private Secret password = null;
     
-    CredentialResolver(final String credentialId, final Run<?, ?> run) {
+    public CredentialResolver(final String credentialId, final Run<?, ?> run) {
         this.credentialId = credentialId;
         this.run = run;
     }
@@ -39,13 +45,40 @@ public class CredentialResolver {
     
     private void resolveUsernamePassword() {
         if (StringUtils.isNotBlank(this.credentialId)) {
-            final StandardUsernamePasswordCredentials credential =
-                    CredentialsProvider.findCredentialById(this.credentialId, StandardUsernamePasswordCredentials.class, run, (List<DomainRequirement>) null);
-
+            final StandardUsernamePasswordCredentials credential = findCredentialById();
             if (credential != null) {
                 this.username = credential.getUsername();
                 this.password = credential.getPassword();
             }
         }
+    }
+
+    @Nullable
+    private StandardUsernamePasswordCredentials findCredentialById() {
+        // Find the Credential at "System" level.
+        final StandardUsernamePasswordCredentials credential =
+                CredentialsProvider.findCredentialById(this.credentialId,
+                                                       StandardUsernamePasswordCredentials.class,
+                                                       run,
+                                                       (List<DomainRequirement>) null);
+
+        if (credential != null) {
+            return credential;
+        }
+
+        // Find the Credential at "User" (who is running the build) level.
+        final Authentication buildUserAuth = Optional.ofNullable(run.getCause(Cause.UserIdCause.class))
+                                                          .map(Cause.UserIdCause::getUserId)
+                                                          .filter(StringUtils::isNotBlank)
+                                                          .map(userId -> User.getById(userId, false))
+                                                          .map(User::impersonate)
+                                                          .orElse(null);
+
+        return CredentialUtil.getAllUserScopedCredentials(run.getParent(), buildUserAuth)
+                .stream()
+                .filter(cred -> StringUtils.equals(cred.getId(), this.credentialId))
+                .findFirst()
+                .orElse(null);
+
     }
 }
