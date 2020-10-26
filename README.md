@@ -14,8 +14,8 @@ Xray is the leading Quality Assurance and Test Management app for Jira. More tha
 
 The guide below it's a "Quick Start" version of our full documentation available in Xray official page:
 
--   Xray Cloud integration with Jenkins: <https://confluence.xpand-it.com/display/XRAYCLOUD/Using+the+Xray+plugin+-+Jenkins>
--   Xray Server/DC integration with Jenkins: <https://confluence.xpand-it.com/display/public/XRAY/Integration+with+Jenkins>
+-   Xray Cloud integration with Jenkins: <https://docs.getxray.app/display/XRAYCLOUD/Integration+with+Jenkins>
+-   Xray Server/DC integration with Jenkins: <https://docs.getxray.app/display/XRAY/Integration+with+Jenkins>
 
 You can also check the source code of the plugin here: <https://github.com/jenkinsci/xray-connector-plugin>
   
@@ -29,7 +29,7 @@ You can also check the source code of the plugin here: <https://github.com/jenki
 
 ### Requirements
 
--   Jenkins 2.60.3 or above
+-   Jenkins 2.138.4 or above
 -   At least one Jira instance (Server, Data Center and/or Cloud) with
     the
     [Xray](https://marketplace.atlassian.com/apps/1211769/xray-test-management-for-jira)
@@ -80,7 +80,7 @@ The ***Xray: Cucumber Features Export Task*** and the ***Xray: Cucumber
 Features Import Task***
 
 Both tasks can be used while executing Cucumber tests: In a
-typical [Cucumber Workflow](https://confluence.xpand-it.com/pages/releaseview.action?pageId=46858243),
+typical [Cucumber Workflow](https://docs.getxray.app/display/XRAY/Integration+with+Jenkins#IntegrationwithJenkins-Cucumber(%22standard%22workflow)),
 after having created a Cucumber project and the Cucumber tests specified
 in Jira, you may want to have a project that **exports** the features
 from Jira, executes the automated tests on a CI environment and then
@@ -110,7 +110,7 @@ Task***, in order to import your Test Results in the following formats:
 -   NUnit XML & NUnit XML Multipart
 -   Robot XML & Robot XML Multipart
 -   TestNG XML & TestNG XML Multipart
--   xUnit XML & xUnit XML Multipart (Xray Cloud only)
+-   xUnit XML & xUnit XML Multipart
 
 ![](https://user-images.githubusercontent.com/11166836/72537277-c1151400-3873-11ea-9a1b-f3baebc2c33f.png)
 

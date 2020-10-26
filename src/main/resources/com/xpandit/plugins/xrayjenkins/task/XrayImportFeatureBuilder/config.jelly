@@ -1,8 +1,15 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:invisibleEntry>
+        <div id="xray_importFeatures_${descriptor.getUuid()}" class="import-features-wrapper"></div>
+    </f:invisibleEntry>
 
     <f:entry title="${%Jira Instance}" field="serverInstance">
-        <f:select/>
+        <f:select id="importCucumber_selectInstance_${descriptor.defaultBuildID()}" />
+    </f:entry>
+
+    <f:entry title="${%Credentials}" field="credentialId">
+        <f:select id="importCucumber_credentialId_${descriptor.defaultBuildID()}" />
     </f:entry>
 
     <f:entry title="${%Project Key}" field="projectKey">
@@ -13,8 +20,63 @@
         <f:textbox/>
     </f:entry>
 
+    <f:entry title="${%Test Info file (optional)}" field="testInfo">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Preconditions file (optional)}" field="preconditions">
+        <f:textbox/>
+    </f:entry>
+
     <f:entry title="${%Modified in the last hours}" field="lastModified">
         <f:textbox/>
     </f:entry>
+
+    <script type="text/javascript">
+        (function(Q) {
+            var $rootTable;
+            function toggleCredentials(changeEvent) {
+                var isUserAuthJiraInstance;
+                if (changeEvent) {
+                    isUserAuthJiraInstance = changeEvent.target &amp;&amp;
+                            Q(changeEvent.target)
+                                    .find('option:selected')
+                                    .text()
+                                    .indexOf("[User Auth required] ") === 0;
+                } else {
+                    isUserAuthJiraInstance = $rootTable
+                            .find("#importCucumber_selectInstance_${descriptor.defaultBuildID()}")
+                            .find('option:selected')
+                            .text()
+                            .indexOf("[User Auth required] ") === 0;
+                }
+
+                const $selectParent = $rootTable
+                        .parent()
+                        .find('#importCucumber_credentialId_${descriptor.defaultBuildID()}')
+                        .parent()
+                        .parent();
+                if (isUserAuthJiraInstance) {
+                    $selectParent.show();
+                } else {
+                    $selectParent.hide();
+                }
+            }
+
+            setTimeout(function() {
+                const wrapperID = Q(".import-features-wrapper").attr("id");
+                Q(".import-features-wrapper")
+                        .removeClass("import-features-wrapper");
+                $rootTable = Q(Q("#" + wrapperID)
+                        .parents('table')
+                        .get(0));
+
+                toggleCredentials();
+                $rootTable
+                        .find("#importCucumber_selectInstance_${descriptor.defaultBuildID()}")
+                        .change(toggleCredentials);
+            }, 500);
+        })(jQuery);
+    </script>
 
 </j:jelly>

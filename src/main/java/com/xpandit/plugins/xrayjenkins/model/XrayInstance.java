@@ -8,11 +8,11 @@
 package com.xpandit.plugins.xrayjenkins.model;
 
 import hudson.model.Run;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -60,21 +60,24 @@ public class XrayInstance {
 		this.serverAddress = serverAddress;
 	}
 
-	@Nonnull
-	public CredentialResolver getCredential(final Run<?, ?> runContext) {
-		this.credentialResolver = ObjectUtils.defaultIfNull(this.credentialResolver, new CredentialResolver(this.credentialId, runContext));
-		return this.credentialResolver;
+	public Optional<CredentialResolver> getCredential(final Run<?, ?> runContext) {
+		if (this.credentialResolver == null && StringUtils.isNotBlank(this.credentialId)) {
+			this.credentialResolver = new CredentialResolver(this.credentialId, runContext);
+		}
+
+		return Optional.ofNullable(this.credentialResolver);
 	}
 	
 	public HostingType getHosting() { return hosting; }
 
 	public void setHosting(HostingType hosting) { this.hosting = hosting; }
 
+	@Nullable
 	public String getCredentialId() {
 		return credentialId;
 	}
 
-	public void setCredentialId(String credentialId) {
+	public void setCredentialId(@Nullable String credentialId) {
 		this.credentialId = credentialId;
 	}
 }
