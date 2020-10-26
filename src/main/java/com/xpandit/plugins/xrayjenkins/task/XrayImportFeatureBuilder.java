@@ -112,7 +112,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         return this.testInfo;
     }
 
-    public void setTestInfo(String folderPath) {
+    public void setTestInfo(String testInfo) {
         this.testInfo = testInfo;
     }
 
