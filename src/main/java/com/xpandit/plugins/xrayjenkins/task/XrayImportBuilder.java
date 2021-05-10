@@ -42,6 +42,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -50,6 +51,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
@@ -993,7 +995,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             return items;
         }
 
-        public ListBoxModel doFillServerInstanceItems() {
+        public ListBoxModel doFillServerInstanceItems(@AncestorInPath Job job) {
+            if (job == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    || job != null && !job.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return FormUtils.getServerInstanceItems();
         }
 
@@ -1045,10 +1051,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             return ServerConfiguration.get().getServerInstances();
         }
 
-        public FormValidation doCheckServerInstance() {
-            return ConfigurationUtils.anyAvailableConfiguration()
-                    ? FormValidation.ok()
-                    : FormValidation.error("No configured Server Instances found");
+
+        public FormValidation doCheckServerInstance(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+            return ConfigurationUtils.anyAvailableConfiguration() ?
+                    FormValidation.ok() :
+                    FormValidation.error("No configured Server Instances.");
         }
 
         public String getCloudHostingTypeName() {

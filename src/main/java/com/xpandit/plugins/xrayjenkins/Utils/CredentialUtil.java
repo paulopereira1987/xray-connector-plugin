@@ -30,8 +30,12 @@ public class CredentialUtil {
      * @param item the context.
      * @return All the System credentials from a given Item context.
      */
-    public static List<StandardUsernamePasswordCredentials> getAllCredentials(@Nullable final Item item) {
-        return getStandardUsernamePasswordCredentials(item, ACL.SYSTEM);
+    public static List<StandardUsernamePasswordCredentials> getAllSystemCredentials(@Nullable final Item item) {
+        if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+            return getStandardUsernamePasswordCredentials(item, ACL.SYSTEM);
+        }
+
+        return Collections.emptyList();
     }
 
     /**
@@ -42,7 +46,7 @@ public class CredentialUtil {
      * @return All the System credentials from a given Item context.
      */
     public static ListBoxModel getAllCredentialsListBoxModel(@Nullable final Item item, final String credentialId) {
-        return getCredentialsListBoxModel(credentialId, getAllCredentials(item));
+        return getCredentialsListBoxModel(credentialId, getAllSystemCredentials(item));
     }
 
     /**
@@ -64,7 +68,9 @@ public class CredentialUtil {
      */
     public static List<StandardUsernamePasswordCredentials> getAllUserScopedCredentials(@Nullable final Item item,
                                                                                         @Nullable final Authentication authentication) {
-        return getStandardUsernamePasswordCredentials(item, authentication);
+        return Jenkins.get().hasPermission(CredentialsProvider.USE_OWN) ?
+                getStandardUsernamePasswordCredentials(item, authentication) :
+                Collections.emptyList();
     }
 
     /**
@@ -81,6 +87,8 @@ public class CredentialUtil {
     private static ListBoxModel getCredentialsListBoxModel(final String credentialId,
                                                            final List<StandardUsernamePasswordCredentials> credentials) {
         final StandardListBoxModel result = new StandardListBoxModel();
+
+        result.includeEmptyValue();
         for (StandardUsernamePasswordCredentials credential : credentials) {
             result.with(credential);
         }

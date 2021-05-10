@@ -356,8 +356,11 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         }
 
         
-        public ListBoxModel doFillServerInstanceItems() {
-        	return FormUtils.getServerInstanceItems();
+        public ListBoxModel doFillServerInstanceItems(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
+            return FormUtils.getServerInstanceItems();
         }
 
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
@@ -422,8 +425,13 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             }
         }
 
-        public FormValidation doCheckServerInstance(){
-            return ConfigurationUtils.anyAvailableConfiguration() ? FormValidation.ok() : FormValidation.error("No configured Server Instances found");
+        public FormValidation doCheckServerInstance(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+            return ConfigurationUtils.anyAvailableConfiguration() ?
+                    FormValidation.ok() :
+                    FormValidation.error("No configured Server Instances.");
         }
 
         public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {

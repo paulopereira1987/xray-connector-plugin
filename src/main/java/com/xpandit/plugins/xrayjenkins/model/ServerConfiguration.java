@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
-import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentials;
+import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllSystemCredentials;
 import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getAllCredentialsListBoxModel;
 
 @Extension
@@ -88,13 +89,11 @@ public class ServerConfiguration extends GlobalConfiguration {
             @AncestorInPath Item item,
             @QueryParameter String value
     ) {
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-        if (item != null
-                && !item.hasPermission(Item.EXTENDED_READ)
-                && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+        if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                || item != null && !item.hasPermission(Item.EXTENDED_READ) && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
             return FormValidation.ok();
         }
-            
+
         if (StringUtils.isBlank(value)) {
             return FormValidation.warning("Leave the credentials field empty if you want to pick user scoped credentials for each Build Task.");
         }
@@ -104,13 +103,14 @@ public class ServerConfiguration extends GlobalConfiguration {
         }
         return FormValidation.ok();
     }
-	
+
+    @RequirePOST
 	public FormValidation doTestConnection(@AncestorInPath final Item item,
                                            @QueryParameter("hosting") final String hosting,
 	                                       @QueryParameter("serverAddress") final String serverAddress,
                                            @QueryParameter("credentialId") final String credentialId) {
 
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         if (StringUtils.isBlank(credentialId)) {
             return FormValidation.error("Authentication is optional, however it is required in order to test the connection.");
         }
@@ -119,7 +119,7 @@ public class ServerConfiguration extends GlobalConfiguration {
             return FormValidation.error("Hosting type can't be blank.");
         }
 
-        final StandardUsernamePasswordCredentials credential = CredentialsMatchers.firstOrNull(getAllCredentials(item), withId(credentialId));
+        final StandardUsernamePasswordCredentials credential = CredentialsMatchers.firstOrNull(getAllSystemCredentials(item), withId(credentialId));
         if (credential == null) {
             return FormValidation.error("Cannot find currently selected credentials");
         }
@@ -169,7 +169,7 @@ public class ServerConfiguration extends GlobalConfiguration {
 	    if (StringUtils.isBlank(credentialId)) {
 	        return null;
         }
-        return CredentialsMatchers.firstOrNull(getAllCredentials(item), withId(credentialId));
+        return CredentialsMatchers.firstOrNull(getAllSystemCredentials(item), withId(credentialId));
     }
 
     private boolean credentialExists(@Nullable final Item item, @Nullable final String credentialId) {

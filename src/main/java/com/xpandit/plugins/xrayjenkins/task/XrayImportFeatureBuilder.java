@@ -370,7 +370,10 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             return ServerConfiguration.get().getServerInstances();
         }
 
-        public ListBoxModel doFillServerInstanceItems() {
+        public ListBoxModel doFillServerInstanceItems(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return FormUtils.getServerInstanceItems();
         }
 
@@ -384,10 +387,13 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
                     : FormValidation.error("You must specify the base directory.");
         }
 
-        public FormValidation doCheckServerInstance() {
-            return ConfigurationUtils.anyAvailableConfiguration()
-                    ? FormValidation.ok()
-                    : FormValidation.error("No configured Server Instances found");
+        public FormValidation doCheckServerInstance(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+            return ConfigurationUtils.anyAvailableConfiguration() ?
+                    FormValidation.ok() :
+                    FormValidation.error("No configured Server Instances.");
         }
 
         public FormValidation doCheckProjectKey(@QueryParameter String projectKey) {
