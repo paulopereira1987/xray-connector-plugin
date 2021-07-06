@@ -107,6 +107,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         return FormValidation.ok();
     }
 
+    public FormValidation doCheckServerAddress(
             @AncestorInPath final Item item,
             @QueryParameter("hosting") final String hosting,
             @QueryParameter("serverAddress") final String serverAddress
