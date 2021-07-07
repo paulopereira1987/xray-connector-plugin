@@ -18,7 +18,7 @@ import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
 import com.xpandit.plugins.xrayjenkins.model.XrayInstance;
 import com.xpandit.plugins.xrayjenkins.services.enviromentvariables.XrayEnvironmentVariableSetter;
-import com.xpandit.plugins.xrayjenkins.task.filefilters.OnlyFeatureFilesInPathFilter;
+import com.xpandit.plugins.xrayjenkins.task.filefilters.DirScannerOnlyFeatureFilesInPath;
 import com.xpandit.xray.exception.XrayClientCoreGenericException;
 import com.xpandit.xray.model.FileStream;
 import com.xpandit.xray.model.UploadResult;
@@ -226,26 +226,10 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     ) throws IOException, InterruptedException {
 
         try {
-            final Set<String> validFilePaths = FileUtils.getFeatureFileNamesFromWorkspace(workspace,
-                                                                                          this.folderPath,
-                                                                                          listener);
-            final FilePath zipFile = createZipFile(workspace);
+            FilePath zipFile = zipFeatureFiles(workspace, listener);
+
             FileStream testInfoFile = null;
             FileStream preconditionsFile = null;
-
-            Path path = Paths.get(this.folderPath);
-            FilePath base = workspace;
-            if (path.isAbsolute()) {
-                base = new FilePath(path.toFile());
-            }
-
-            validFilePaths.forEach(filePath -> listener.getLogger().println("File found: " + filePath));
-            listener.getLogger()
-                    .println(
-                            "Creating zip to import feature files. This may take a while if you have a big number of files.");
-
-            base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
-
             if (StringUtils.isNotBlank(this.testInfo)) {
 
                 listener.getLogger().println("Getting Test Info file...");
@@ -286,6 +270,33 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         }
     }
 
+    private FilePath zipFeatureFiles(FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
+        final Set<String> validFilePaths = FileUtils.getFeatureFileNamesFromWorkspace(
+                workspace,
+                this.folderPath,
+                listener);
+
+        final FilePath zipFile = createZipFilePath(workspace);
+        Path path = Paths.get(this.folderPath);
+        FilePath filesRootPath = getFeatureFilesFolderRootPath(workspace, path);
+
+        validFilePaths.forEach(filePath -> listener.getLogger().println("File found: " + filePath));
+        listener.getLogger()
+                .println(
+                        "Creating zip to import feature files. This may take a while if you have a big number of files.");
+
+        filesRootPath.zip(zipFile.write(), new DirScannerOnlyFeatureFilesInPath(validFilePaths, lastModified));
+        return zipFile;
+    }
+
+    private FilePath getFeatureFilesFolderRootPath(FilePath workspace, Path path) {
+        if (path.isAbsolute()) {
+            return new FilePath(path.toFile());
+        } else {
+            return workspace;
+        }
+    }
+
     private FilePath getFile(
             FilePath workspace,
             String filePath,
@@ -303,6 +314,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         if (file.isDirectory() || !file.exists()) {
             throw new XrayJenkinsGenericException("File path is a directory or the file doesn't exist");
         }
+
         return file;
     }
 
@@ -333,7 +345,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
         return uploadResult;
     }
 
-    private FilePath createZipFile(final FilePath workspace) {
+    private FilePath createZipFilePath(final FilePath workspace) {
         return new FilePath(workspace, TMP_ZIP_FILENAME);
     }
 
