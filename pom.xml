@@ -175,7 +175,7 @@
 		</repository>
 		<repository>
 			<id>xpandit-repo-releases-public</id>
-			<url>http://maven.xpand-it.com/artifactory/releases</url>
+			<url>https://maven.xpand-it.com/artifactory/releases</url>
 		</repository>
 	</repositories>
 	
