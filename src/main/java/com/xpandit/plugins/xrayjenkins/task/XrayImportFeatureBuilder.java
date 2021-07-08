@@ -323,6 +323,11 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             FileStream testInfo,
             FileStream preconditions
     ) throws IOException, InterruptedException {
+        if (zipFile.isRemote()) {
+            listener.getLogger().println("Waiting 10 seconds to finish the zip before making the request");
+            Thread.sleep(10_000L);
+        }
+        
         FileStream zipFileStream = new FileStream(
                 zipFile.getName(),
                 zipFile.read(),
