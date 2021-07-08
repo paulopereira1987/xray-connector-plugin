@@ -20,6 +20,7 @@ import hudson.model.Item;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
@@ -120,7 +121,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         }
 
         // We only need to check the URL for Server instances, since Cloud API URL is hardcoded and controlled by us.
-        if (hosting.equals(HostingType.SERVER.toString()) && StringUtils.isNotBlank(serverAddress)) {
+        if (Objects.equals(hosting, HostingType.SERVER.toString()) && StringUtils.isNotBlank(serverAddress)) {
             HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
             XrayClientImpl xrayClient = new XrayClientImpl(serverAddress, null, null, proxyBean);
             if (!xrayClient.isJiraInstance()) {
@@ -165,12 +166,7 @@ public class ServerConfiguration extends GlobalConfiguration {
             }
 
             XrayClientImpl xrayClient = new XrayClientImpl(serverAddress, username, password, proxyBean);
-            if (!xrayClient.isJiraInstance()) {
-                logger.error("URL provided is not from a Jira instance -> {}/rest/api/2/serverInfo didn't return a valid result.", serverAddress);
-                connectionResult = ConnectionResult.connectionFailed("URL provided is not from a Jira instance (check if your /serverInfo endpoint is not blocked)");
-            } else {
-                connectionResult = xrayClient.testConnection();
-            }
+            connectionResult = jiraServerTestConnection(serverAddress, xrayClient);
         } else {
             return FormValidation.error("Hosting type not recognized.");
         }
@@ -184,6 +180,15 @@ public class ServerConfiguration extends GlobalConfiguration {
 
             logger.error("Error while connecting to instance:\n{}", connectionResult.getErrorText());
             return FormValidation.error(errorText);
+        }
+    }
+
+    private ConnectionResult jiraServerTestConnection(String serverAddress, XrayClientImpl xrayClient) {
+        if (!xrayClient.isJiraInstance()) {
+            logger.error("URL provided is not from a Jira instance -> {}/rest/api/2/serverInfo didn't return a valid result.", serverAddress);
+            return ConnectionResult.connectionFailed("URL provided is not from a Jira instance (check if your /serverInfo endpoint is not blocked)");
+        } else {
+            return xrayClient.testConnection();
         }
     }
 
