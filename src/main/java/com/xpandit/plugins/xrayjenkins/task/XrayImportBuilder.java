@@ -57,6 +57,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -675,7 +676,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             throw new XrayJenkinsGenericException("Instance type not found.");
         }
 
-        if (key == null) {
+        if (key == null && result.getStatusCode() != HttpStatus.SC_ACCEPTED) {
             XrayEnvironmentVariableSetter
                     .failed("No Test Execution Key returned")
                     .setAction(build, listener);
