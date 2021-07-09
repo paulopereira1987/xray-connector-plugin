@@ -71,7 +71,7 @@ public class FileUtils {
         FilePath filePath = readFile(workspace, path, listener);
         
         if (filePath.isDirectory()) {
-            paths.addAll(Arrays.asList(filePath.list("*.feature", "", false)));
+            paths.addAll(Arrays.asList(filePath.list("*" + FEATURE_FILE_EXTENSION, "", false)));
             List<FilePath> children = filePath.list();
             for (FilePath child : children) {
                 if (child.isDirectory()) {
@@ -81,7 +81,7 @@ public class FileUtils {
         } else if (isFeatureFile(filePath)) {
             paths.add(filePath);
         } else {
-            throw new XrayJenkinsGenericException("The path is not a folder or a feature file");
+            throw new XrayJenkinsGenericException("The path is not a folder or a single feature file");
         }
         
         return paths;
