@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileUtils {
+    private static String FEATURE_FILE_EXTENSION = ".feature";
 
     private FileUtils() {
     }
@@ -67,19 +68,27 @@ public class FileUtils {
             throw new XrayJenkinsGenericException(errors);
         }
         List<FilePath> paths = new ArrayList<>();
-        FilePath folder = readFile(workspace, path, listener);
-        if (folder.isDirectory()) {
-            paths.addAll(Arrays.asList(folder.list("*.feature", "", false)));
-            List<FilePath> children = folder.list();
+        FilePath filePath = readFile(workspace, path, listener);
+        
+        if (filePath.isDirectory()) {
+            paths.addAll(Arrays.asList(filePath.list("*.feature", "", false)));
+            List<FilePath> children = filePath.list();
             for (FilePath child : children) {
                 if (child.isDirectory()) {
                     paths.addAll(getFeatureFilesFromWorkspace(workspace, child.toString(), listener));
                 }
             }
+        } else if (isFeatureFile(filePath)) {
+            paths.add(filePath);
         } else {
-            throw new XrayJenkinsGenericException("The path is not a folder");
+            throw new XrayJenkinsGenericException("The path is not a folder or a feature file");
         }
+        
         return paths;
+    }
+    
+    private static boolean isFeatureFile(FilePath filePath) throws IOException, InterruptedException {
+        return filePath.exists() && StringUtils.endsWith(filePath.getName(), FEATURE_FILE_EXTENSION);
     }
 
     /**

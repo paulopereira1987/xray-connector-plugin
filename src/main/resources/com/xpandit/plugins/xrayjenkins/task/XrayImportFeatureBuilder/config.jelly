@@ -16,7 +16,7 @@
         <f:textbox/>
     </f:entry>
 
-    <f:entry title="${%Cucumber feature files directory}" field="folderPath">
+    <f:entry title="${%Cucumber feature files directory or file}" field="folderPath">
         <f:textbox/>
     </f:entry>
 
