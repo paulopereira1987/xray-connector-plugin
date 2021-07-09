@@ -64,6 +64,7 @@ import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScoped
 public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep {
 
     private static final String TMP_ZIP_FILENAME = "xray_cucumber_features.zip";
+    public static final long    ZIP_WAIT_TIME = 10_000L;
 
     private String serverInstance;
     private String folderPath;
@@ -325,7 +326,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
     ) throws IOException, InterruptedException {
         if (zipFile.isRemote()) {
             listener.getLogger().println("Waiting 10 seconds to finish the zip before making the request");
-            Thread.sleep(10_000L);
+            Thread.sleep(ZIP_WAIT_TIME);
         }
         
         FileStream zipFileStream = new FileStream(
