@@ -131,7 +131,7 @@
 			    var testConnectionButton = Q('.test-connection-button-wrapper button');
 			    
 			    Q(testConnectionButton).click(function(evt) {
-			        Q(evt.target).parents('.test-connection-button-wrapper').find('.error').remove();
+			        Q(evt.target).parents('.test-connection-button-wrapper').find('.error,.ok').remove();
 			    });
 			};
 
