@@ -1,10 +1,3 @@
-/*
- * XP.RAVEN Project
- * <p/>
- * Copyright (C) 2018 Xpand IT.
- * <p/>
- * This software is proprietary.
- */
 package com.xpandit.plugins.xrayjenkins.Utils;
 
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
