@@ -42,7 +42,7 @@
 					<f:entry title="" field="serverInstanceHelp">
 						<span class="server-instance-help-header">There are two types of credentials supported:</span>
 						<br/>
-						<span><b>Username/Password:</b> This is the traditional method to authenticate in a jira Server Instance</span>
+						<span><b>Username/Password:</b> This is the traditional method to authenticate in a Jira Server instance</span>
 						<br/>
 						<span><b>Bearer Token:</b> a token can be used to authenticate all requests made. For this, please out your token in a credential of type <b>Secret text</b></span>
 					</f:entry>
