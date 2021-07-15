@@ -285,7 +285,7 @@
             toggleCredentials_${descriptor.defaultBuildID()} = function (changeEvent) {
                 var isUserAuthJiraInstance;
                 if (changeEvent) {
-                    isUserAuthJiraInstance = changeEvent.target &amp;&amp;
+                    isUserAuthJiraInstance = changeEvent.target
                             Q(changeEvent.target)
                                     .find('option:selected')
                                     .text()
