@@ -67,6 +67,10 @@
                             .change(function () {
                                 toggleCredentials(ele);
                             });
+                      
+                        setTimeout(function() {
+                            toggleCredentials(ele);
+                        }, 1000);
                     });
                 }, 500);
             })(jQuery);
