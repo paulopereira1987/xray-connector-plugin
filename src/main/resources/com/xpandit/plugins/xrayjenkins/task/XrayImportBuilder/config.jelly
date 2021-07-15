@@ -1,7 +1,11 @@
 
 <?jelly escape-by-default='false'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+<div class="xray-import-results">
 
+    <f:invisibleEntry>
+        <div id="xray_importResults_${descriptor.getUuid()}" class="xray-import-results-wrapper"></div>
+    </f:invisibleEntry>
     <script src="${resURL}/plugin/xray-connector/handlebars-v4.0.5.amd.min.js"></script>
     <script src="${resURL}/plugin/xray-connector/helpers/register-helpers.js"></script>
 
@@ -282,25 +286,18 @@
                 }
             };
 
-            toggleCredentials_${descriptor.defaultBuildID()} = function (changeEvent) {
-                var isUserAuthJiraInstance;
-                if (changeEvent) {
-                    isUserAuthJiraInstance = changeEvent.target
-                            Q(changeEvent.target)
-                                    .find('option:selected')
-                                    .text()
-                                    .indexOf("[User Auth required] ") === 0;
-                } else {
-                    isUserAuthJiraInstance = Q('#selectInstance_${descriptor.defaultBuildID()}')
-                            .find('option:selected')
-                            .text()
-                            .indexOf("[User Auth required] ") === 0;
-                }
+            toggleCredentials = function (ele) {
+                var isUserAuthJiraInstance = ele.find('#selectInstance_${descriptor.defaultBuildID()}')
+                                                                       .find('option:selected')
+                                                                       .text()
+                                                                       .indexOf("[User Auth required] ") === 0;
 
-                const $selectParent = Q('#credentialId_${descriptor.defaultBuildID()}')
-                        .parent()
-                        .parent();
-
+                const $selectParent = ele
+                            .parent()
+                            .find('#credentialId_${descriptor.defaultBuildID()}')
+                            .parent()
+                            .parent();
+                            
                 if (isUserAuthJiraInstance) {
                     $selectParent.show();
                 } else {
@@ -343,14 +340,12 @@
                         }
 
                         changeDocLink_${descriptor.defaultBuildID()}();
-                        toggleCredentials_${descriptor.defaultBuildID()}();
 
                         //register event-handler
                         Q('#selectInstance_${descriptor.defaultBuildID()}').on('change',function(e){
                             //whenever we select an instance we need to filter the format options and change the doc link
                             filterFormats_${descriptor.defaultBuildID()}();
                             changeDocLink_${descriptor.defaultBuildID()}();
-                            toggleCredentials_${descriptor.defaultBuildID()}(e);
                         });
 
                         Q('#selectFormat_${descriptor.defaultBuildID()}').on('change',function(e){
@@ -370,11 +365,25 @@
 
             setTimeout(function() {
                 changeDocLink_${descriptor.defaultBuildID()}();
-                toggleCredentials_${descriptor.defaultBuildID()}();
+                
+                Q(".xray-import-results-wrapper").each(function () {
+                    const wrapperID = Q(this).attr("id");
+                    Q(this).removeClass("xray-import-results-wrapper");
+                    var ele = Q(Q("#" + wrapperID)
+                        .parents('.xray-import-results')
+                        .get(0));
+                
+                    toggleCredentials(ele);
+                    ele.find("#selectInstance_${descriptor.defaultBuildID()}")
+                        .change(function () {
+                            toggleCredentials(ele);
+                        });
+                });
+                                    
             }, 500);
         })(jQuery);
 
     </script>
-
+</div>
 </j:jelly>
 
