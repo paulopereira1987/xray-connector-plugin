@@ -1,18 +1,14 @@
-/**
- * XP.RAVEN Project
- * <p>
- * Copyright (C) 2016 Xpand IT.
- * <p>
- * This software is proprietary.
- */
 package com.xpandit.plugins.xrayjenkins.task;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
+import com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil;
 import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.factory.ClientFactory;
 import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
@@ -37,6 +33,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.util.Optional;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
@@ -183,19 +180,28 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
 
         final CredentialResolver credentialResolver = xrayInstance
                 .getCredential(build)
-                .orElseGet(() -> new CredentialResolver(credentialId, build));
+                .orElseGet(() -> new CredentialResolver(credentialId, build, xrayInstance.getHosting()));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
-        XrayExporter client;
 
+        final StandardCredentials credentials = credentialResolver.getCredentials();
+        if (credentials == null) {
+            String credentialIdNotFound = Optional.ofNullable(xrayInstance.getCredentialId())
+                    .filter(StringUtils::isNotBlank)
+                    .orElse(this.credentialId);
+            String errorTxt = String.format(
+                    "Unable to create Xray %s feature export client! Credential '%s' not found. For Cloud instances: Secret Text credentials are not allowed",
+                    xrayInstance.getHosting().name(),
+                    credentialIdNotFound);
+            throw new AbortException(errorTxt);
+        }
+
+        XrayExporter client;
         if (xrayInstance.getHosting() == HostingType.CLOUD) {
-            client = new XrayExporterCloudImpl(credentialResolver.getUsername(),
-                                               credentialResolver.getPassword(),
-                                               proxyBean);
+            client = ClientFactory.getCloudFeatureExportClient(credentials, proxyBean)
+                    .orElseThrow(() -> new XrayJenkinsGenericException("Unable to create Xray Cloud feature export client! (check credential type selected)."));
         } else if (xrayInstance.getHosting() == null || xrayInstance.getHosting() == HostingType.SERVER) {
-            client = new XrayExporterImpl(xrayInstance.getServerAddress(),
-                                          credentialResolver.getUsername(),
-                                          credentialResolver.getPassword(),
-                                          proxyBean);
+            client = ClientFactory.getServerFeatureExportClient(xrayInstance.getServerAddress(), credentials, proxyBean)
+                    .orElseThrow(() -> new XrayJenkinsGenericException("Unable to create Xray Server feature export client! (check credential type selected)."));
         } else {
             XrayEnvironmentVariableSetter
                     .failed("Hosting type not recognized.")
@@ -356,8 +362,11 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
         }
 
         
-        public ListBoxModel doFillServerInstanceItems() {
-        	return FormUtils.getServerInstanceItems();
+        public ListBoxModel doFillServerInstanceItems(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
+            return FormUtils.getServerInstanceItems();
         }
 
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
@@ -422,8 +431,13 @@ public class XrayExportBuilder extends Builder implements SimpleBuildStep {
             }
         }
 
-        public FormValidation doCheckServerInstance(){
-            return ConfigurationUtils.anyAvailableConfiguration() ? FormValidation.ok() : FormValidation.error("No configured Server Instances found");
+        public FormValidation doCheckServerInstance(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+            return ConfigurationUtils.anyAvailableConfiguration() ?
+                    FormValidation.ok() :
+                    FormValidation.error("No configured Server Instances.");
         }
 
         public FormValidation doCheckCredentialId(@QueryParameter String value, @QueryParameter String serverInstance) {

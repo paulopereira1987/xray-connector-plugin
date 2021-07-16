@@ -1,13 +1,6 @@
-
-/**
- * XP.RAVEN Project
- * <p>
- * Copyright (C) 2016 Xpand IT.
- * <p>
- * This software is proprietary.
- */
 package com.xpandit.plugins.xrayjenkins.task;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -17,6 +10,7 @@ import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.factory.ClientFactory;
 import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
@@ -42,6 +36,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -50,11 +45,13 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -527,22 +524,31 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
 
         final CredentialResolver credentialResolver = importInstance
                 .getCredential(build)
-                .orElseGet(() -> new CredentialResolver(this.credentialId, build));
+                .orElseGet(() -> new CredentialResolver(this.credentialId, build, importInstance.getHosting()));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
         final HostingType hostingType = importInstance.getHosting() == null
                 ? HostingType.SERVER
                 : importInstance.getHosting();
-        XrayImporter client;
 
+        final StandardCredentials credentials = credentialResolver.getCredentials();
+        if (credentials == null) {
+            String credentialIdNotFound = Optional.ofNullable(importInstance.getCredentialId())
+                    .filter(StringUtils::isNotBlank)
+                    .orElse(this.credentialId);
+            String errorTxt = String.format(
+                    "Unable to create Xray %s results import client! Credential '%s' not found. For Cloud instances: Secret Text credentials are not allowed",
+                    hostingType.name(),
+                    credentialIdNotFound);
+            throw new AbortException(errorTxt);
+        }
+
+        XrayImporter client;
         if (hostingType == HostingType.CLOUD) {
-            client = new XrayImporterCloudImpl(credentialResolver.getUsername(),
-                                               credentialResolver.getPassword(),
-                                               proxyBean);
+            client = ClientFactory.getCloudResultsImportClient(credentials, proxyBean)
+                    .orElseThrow(() -> new XrayJenkinsGenericException("Unable to create Xray Cloud results import client! (check credential type selected)."));
         } else if (hostingType == HostingType.SERVER) {
-            client = new XrayImporterImpl(importInstance.getServerAddress(),
-                                          credentialResolver.getUsername(),
-                                          credentialResolver.getPassword(),
-                                          proxyBean);
+            client = ClientFactory.getServerResultsImportClient(importInstance.getServerAddress(), credentials, proxyBean)
+                    .orElseThrow(() -> new XrayJenkinsGenericException("Unable to create Xray Server/DC results import client! (check credential type selected)."));
         } else {
             XrayEnvironmentVariableSetter
                     .failed("Hosting type not recognized.")
@@ -673,7 +679,7 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             throw new XrayJenkinsGenericException("Instance type not found.");
         }
 
-        if (key == null) {
+        if (key == null && result.getStatusCode() != HttpStatus.SC_ACCEPTED) {
             XrayEnvironmentVariableSetter
                     .failed("No Test Execution Key returned")
                     .setAction(build, listener);
@@ -993,7 +999,11 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             return items;
         }
 
-        public ListBoxModel doFillServerInstanceItems() {
+        public ListBoxModel doFillServerInstanceItems(@AncestorInPath Job job) {
+            if (job == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                    || job != null && !job.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return FormUtils.getServerInstanceItems();
         }
 
@@ -1045,10 +1055,14 @@ public class XrayImportBuilder extends Notifier implements SimpleBuildStep {
             return ServerConfiguration.get().getServerInstances();
         }
 
-        public FormValidation doCheckServerInstance() {
-            return ConfigurationUtils.anyAvailableConfiguration()
-                    ? FormValidation.ok()
-                    : FormValidation.error("No configured Server Instances found");
+
+        public FormValidation doCheckServerInstance(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+            return ConfigurationUtils.anyAvailableConfiguration() ?
+                    FormValidation.ok() :
+                    FormValidation.error("No configured Server Instances.");
         }
 
         public String getCloudHostingTypeName() {

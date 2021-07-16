@@ -11,7 +11,7 @@
 
 	<groupId>org.jenkins-ci.plugins</groupId>
 	<artifactId>xray-connector</artifactId>
-	<version>2.4.1-SNAPSHOT</version>
+	<version>2.5.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
 	<properties>
@@ -36,7 +36,7 @@
 		<developer>
 			<id>Support</id>
 			<name>Xray - Test Management for Jira</name>
-			<email>xray.support@xpand-it.com</email>
+			<email>support@getxray.app</email>
 		</developer>
 	</developers>
 	
@@ -44,14 +44,14 @@
 		<connection>scm:git:ssh://git@github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection> 
 		<url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-		<tag>xray-connector-2.3.0</tag>
+		<tag>xray-connector-2.5.0</tag>
 	</scm>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.xpandit.xray</groupId>
 			<artifactId>client-core</artifactId>			
-    		<version>2.4.0.1</version>
+    		<version>2.5.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>
@@ -72,7 +72,7 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.5.3</version>
+			<version>4.5.13</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 		<dependency>
@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20190722</version>
+			<version>20210307</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -100,13 +100,19 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.9.10.5</version>
+			<version>2.9.10.8</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins/credentials -->
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>credentials</artifactId>
 			<version>2.1.10</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins/plain-credentials -->
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>plain-credentials</artifactId>
+			<version>1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
@@ -175,7 +181,7 @@
 		</repository>
 		<repository>
 			<id>xpandit-repo-releases-public</id>
-			<url>http://maven.xpand-it.com/artifactory/releases</url>
+			<url>https://maven.xpand-it.com/artifactory/releases</url>
 		</repository>
 	</repositories>
 	

@@ -39,9 +39,18 @@
 						<span><b>Xray Client Secret</b> should be placed in the <b>Password</b> field</span>
 					</f:entry>
 
-					<f:validateButton title="${%Test Connection}" progress="${%Testing...}"
-									  method="testConnection" with="hosting,serverAddress,credentialId" />
+					<f:entry title="" field="serverInstanceHelp">
+						<span class="server-instance-help-header">There are two types of credentials supported:</span>
+						<br/>
+						<span><b>Username/Password:</b> This is the traditional method to authenticate in a Jira Server instance</span>
+						<br/>
+						<span><b>Bearer Token:</b> a token can be used to authenticate all requests made. For this, please out your token in a credential of type <b>Secret text</b></span>
+					</f:entry>
 
+                    <div class="test-connection-button-wrapper">
+                        <f:validateButton title="${%Test Connection}" progress="${%Testing...}"
+                                          method="testConnection" with="hosting,serverAddress,credentialId" />
+                    </div>
 					<f:entry>
 						<div align="right" class="repeatable-delete show-if-only" style="margin-left: 1em;">
 							<f:repeatableDeleteButton value="${%Delete instance}"/><br/>
@@ -61,14 +70,17 @@
 	
 	<script>
 		(function(Q){
-		    var toggleCloudHelp = function(instanceInput) {
+		    var toggleHelpText = function(instanceInput) {
 				const hostingType = Q(instanceInput).first().find('select[name="hosting"]')[0].value;
 				const $fieldCloudHelperWrapper = Q(instanceInput).first().find('.cloud-instance-help-header').parent().parent();
+				const $fieldServerHelperWrapper = Q(instanceInput).first().find('.server-instance-help-header').parent().parent();
 
 				if(hostingType === '${descriptor.cloudHostingTypeName}'){
 					$fieldCloudHelperWrapper.show();
+					$fieldServerHelperWrapper.hide();
 				} else if(hostingType === '${descriptor.serverHostingTypeName}'){
 					$fieldCloudHelperWrapper.hide();
+					$fieldServerHelperWrapper.show();
 				}
 			};
 
@@ -76,20 +88,19 @@
 				var hostingType = Q(instanceInput).first().find('select[name="hosting"]')[0].value;
 
 				const $fieldWrapper = Q(instanceInput).first().find('input[name="_.serverAddress"]').parent().parent();
-				const $fieldCloudHelperWrapper = Q(instanceInput).first().find('.cloud-instance-help-header').parent().parent();
 				if(hostingType === '${descriptor.cloudHostingTypeName}'){
 					$fieldWrapper.hide();
-					$fieldCloudHelperWrapper.show();
 				} else if(hostingType === '${descriptor.serverHostingTypeName}'){
 					$fieldWrapper.show();
-					$fieldCloudHelperWrapper.hide();
 				}
+
+				toggleHelpText(instanceInput);
 			};
 
 			var hideServerAddressInputs = function(){
 				Q('div[name="serverInstances"]').each(function(){
 					hideServerAddressInput(this);
-					toggleCloudHelp(this);
+					toggleHelpText(this);
 				});
 			};
 
@@ -101,7 +112,7 @@
 					hideServerAddressInput(serverInstance);
 				});
 
-				toggleCloudHelp(Q('div[name="serverInstances"]').last());
+				toggleHelpText(Q('div[name="serverInstances"]').last());
 
 				observeNewInstance.disconnect();
 			});
@@ -125,6 +136,12 @@
 			            childList: true,
 						subtree: true
 			        });
+			    });
+			    
+			    var testConnectionButton = Q('.test-connection-button-wrapper button');
+			    
+			    Q(testConnectionButton).click(function(evt) {
+			        Q(evt.target).parents('.test-connection-button-wrapper').find('.error,.ok').remove();
 			    });
 			};
 

@@ -1,10 +1,3 @@
-/**
- * XP.RAVEN Project
- * <p>
- * Copyright (C) 2016 Xpand IT.
- * <p>
- * This software is proprietary.
- */
 package com.xpandit.plugins.xrayjenkins.model;
 
 import hudson.model.Run;
@@ -62,7 +55,7 @@ public class XrayInstance {
 
 	public Optional<CredentialResolver> getCredential(final Run<?, ?> runContext) {
 		if (this.credentialResolver == null && StringUtils.isNotBlank(this.credentialId)) {
-			this.credentialResolver = new CredentialResolver(this.credentialId, runContext);
+			this.credentialResolver = new CredentialResolver(this.credentialId, runContext, this.hosting);
 		}
 
 		return Optional.ofNullable(this.credentialResolver);

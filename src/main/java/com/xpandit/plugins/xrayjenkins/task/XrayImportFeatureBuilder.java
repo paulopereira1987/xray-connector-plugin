@@ -1,18 +1,13 @@
-/*
- * XP.RAVEN Project
- * <p/>
- * Copyright (C) 2018 Xpand IT.
- * <p/>
- * This software is proprietary.
- */
 package com.xpandit.plugins.xrayjenkins.task;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.xpandit.plugins.xrayjenkins.Utils.BuilderUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ConfigurationUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.FormUtils;
 import com.xpandit.plugins.xrayjenkins.Utils.ProxyUtil;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
+import com.xpandit.plugins.xrayjenkins.factory.ClientFactory;
 import com.xpandit.plugins.xrayjenkins.model.CredentialResolver;
 import com.xpandit.plugins.xrayjenkins.model.HostingType;
 import com.xpandit.plugins.xrayjenkins.model.ServerConfiguration;
@@ -38,6 +33,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.util.Optional;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -64,6 +60,7 @@ import static com.xpandit.plugins.xrayjenkins.Utils.CredentialUtil.getUserScoped
 public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep {
 
     private static final String TMP_ZIP_FILENAME = "xray_cucumber_features.zip";
+    public static final long ZIP_WAIT_TIME_MILLISECONDS = 10_000L;
 
     private String serverInstance;
     private String folderPath;
@@ -191,18 +188,28 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
 
         final CredentialResolver credentialResolver = xrayInstance
                 .getCredential(run)
-                .orElseGet(() -> new CredentialResolver(this.credentialId, run));
+                .orElseGet(() -> new CredentialResolver(this.credentialId, run, xrayInstance.getHosting()));
         final HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
+
+        final StandardCredentials credentials = credentialResolver.getCredentials();
+        if (credentials == null) {
+            String credentialIdNotFound = Optional.ofNullable(xrayInstance.getCredentialId())
+                    .filter(StringUtils::isNotBlank)
+                    .orElse(this.credentialId);
+            String errorTxt = String.format(
+                    "Unable to create Xray %s feature import client! Credential '%s' not found. For Cloud instances: Secret Text credentials are not allowed",
+                    xrayInstance.getHosting().name(),
+                    credentialIdNotFound);
+            throw new AbortException(errorTxt);
+        }
+
         XrayTestImporter client;
         if (xrayInstance.getHosting() == HostingType.CLOUD) {
-            client = new XrayTestImporterCloudImpl(credentialResolver.getUsername(),
-                                                   credentialResolver.getPassword(),
-                                                   proxyBean);
+            client = ClientFactory.getCloudFeatureImportClient(credentials, proxyBean)
+                    .orElseThrow(() -> new XrayJenkinsGenericException("Unable to create Xray Cloud feature import client! (check credential type selected)."));
         } else if (xrayInstance.getHosting() == null || xrayInstance.getHosting() == HostingType.SERVER) {
-            client = new XrayTestImporterImpl(xrayInstance.getServerAddress(),
-                                              credentialResolver.getUsername(),
-                                              credentialResolver.getPassword(),
-                                              proxyBean);
+            client = ClientFactory.getServerFeatureImportClient(xrayInstance.getServerAddress(), credentials, proxyBean)
+                    .orElseThrow(() -> new XrayJenkinsGenericException("Unable to create Xray Server feature import client! (check credential type selected)."));
         } else {
             addFailedOpEnvironmentVariables(run, "Hosting type not recognized.", listener);
             throw new XrayJenkinsGenericException("Hosting type not recognized.");
@@ -323,6 +330,11 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             FileStream testInfo,
             FileStream preconditions
     ) throws IOException, InterruptedException {
+        if (zipFile.isRemote()) {
+            listener.getLogger().println("Waiting 10 seconds to finish the zip before making the request");
+            Thread.sleep(ZIP_WAIT_TIME_MILLISECONDS);
+        }
+        
         FileStream zipFileStream = new FileStream(
                 zipFile.getName(),
                 zipFile.read(),
@@ -370,7 +382,10 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             return ServerConfiguration.get().getServerInstances();
         }
 
-        public ListBoxModel doFillServerInstanceItems() {
+        public ListBoxModel doFillServerInstanceItems(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             return FormUtils.getServerInstanceItems();
         }
 
@@ -384,10 +399,13 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
                     : FormValidation.error("You must specify the base directory.");
         }
 
-        public FormValidation doCheckServerInstance() {
-            return ConfigurationUtils.anyAvailableConfiguration()
-                    ? FormValidation.ok()
-                    : FormValidation.error("No configured Server Instances found");
+        public FormValidation doCheckServerInstance(@AncestorInPath Item item) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+            return ConfigurationUtils.anyAvailableConfiguration() ?
+                    FormValidation.ok() :
+                    FormValidation.error("No configured Server Instances.");
         }
 
         public FormValidation doCheckProjectKey(@QueryParameter String projectKey) {
