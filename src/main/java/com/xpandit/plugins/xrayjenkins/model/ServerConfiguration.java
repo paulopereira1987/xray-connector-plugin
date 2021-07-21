@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -75,7 +76,8 @@ public class ServerConfiguration extends GlobalConfiguration {
             return;
         }
         JSONObject xrayInstances = formData.getJSONObject("xrayinstance");
-        if (!xrayInstances.has("serverInstances")) {
+        if (!xrayInstances.has("serverInstances") ||
+                !(xrayInstances.get("serverInstances") instanceof JSONArray)) {
             return;
         }
         String xrayInstancesJson = xrayInstances.getJSONArray("serverInstances").toString();
