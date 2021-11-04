@@ -39,10 +39,10 @@
 			<email>support@getxray.app</email>
 		</developer>
 	</developers>
-	
-	<scm> 
+
+	<scm>
 		<connection>scm:git:ssh://git@github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection> 
+		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
 		<url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
 		<tag>xray-connector-2.5.0</tag>
 	</scm>
@@ -50,7 +50,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.xpandit.xray</groupId>
-			<artifactId>client-core</artifactId>			
+			<artifactId>client-core</artifactId>
     		<version>2.5.0.3</version>
 		</dependency>
 		<dependency>
@@ -173,18 +173,18 @@
 	        </plugin>
         </plugins>
 	</build>
-	
+
 	<repositories>
 		<repository>
 			<id>repo.jenkins-ci.org</id>
 			<url>https://repo.jenkins-ci.org/public/</url>
 		</repository>
 		<repository>
-			<id>xpandit-repo-releases-public</id>
-			<url>https://maven.xpand-it.com/artifactory/releases</url>
+			<id>xblend-repo-releases-public</id>
+			<url>https://maven.getxray.app:443/artifactory/releases</url>
 		</repository>
 	</repositories>
-	
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>repo.jenkins-ci.org</id>
