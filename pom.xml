@@ -11,7 +11,7 @@
 
 	<groupId>org.jenkins-ci.plugins</groupId>
 	<artifactId>xray-connector</artifactId>
-	<version>2.5.2-SNAPSHOT</version>
+	<version>2.5.4-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
 	<properties>
@@ -28,7 +28,7 @@
 	<licenses>
 		<license>
 			<name>MIT License</name>
-			<url>http://opensource.org/licenses/MIT</url>
+			<url>https://opensource.org/licenses/MIT</url>
 		</license>
 	</licenses>
 
@@ -39,19 +39,19 @@
 			<email>support@getxray.app</email>
 		</developer>
 	</developers>
-	
-	<scm> 
+
+	<scm>
 		<connection>scm:git:ssh://git@github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection> 
-		<url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
+		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+		<url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 		<tag>xray-connector-2.5.0</tag>
 	</scm>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.xpandit.xray</groupId>
-			<artifactId>client-core</artifactId>			
-    		<version>2.5.0.3</version>
+			<artifactId>client-core</artifactId>
+    		<version>2.5.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.main</groupId>
@@ -78,7 +78,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.7</version>
+			<version>3.12.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
@@ -173,18 +173,18 @@
 	        </plugin>
         </plugins>
 	</build>
-	
+
 	<repositories>
 		<repository>
 			<id>repo.jenkins-ci.org</id>
 			<url>https://repo.jenkins-ci.org/public/</url>
 		</repository>
 		<repository>
-			<id>xpandit-repo-releases-public</id>
-			<url>https://maven.xpand-it.com/artifactory/releases</url>
+			<id>xblend-repo-releases-public</id>
+			<url>https://maven.getxray.app:443/artifactory/releases</url>
 		</repository>
 	</repositories>
-	
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>repo.jenkins-ci.org</id>
