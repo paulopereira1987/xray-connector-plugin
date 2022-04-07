@@ -1,5 +1,6 @@
 package com.xpandit.plugins.xrayjenkins.task.filefilters;
 
+import com.xpandit.plugins.xrayjenkins.Utils.FileUtils;
 import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import hudson.FilePath;
 import java.io.File;
@@ -20,7 +21,7 @@ public class OnlyFeatureFilesInPathFilter implements FileFilter, Serializable {
 
     private final Set<String> validFilePaths;
     private final String lastModified;
-    
+
     public OnlyFeatureFilesInPathFilter(Set<String> validFilePaths, String lastModified) {
         this.validFilePaths = validFilePaths;
         this.lastModified = lastModified;
@@ -28,39 +29,10 @@ public class OnlyFeatureFilesInPathFilter implements FileFilter, Serializable {
 
     @Override
     public boolean accept(File pathname) {
-        try {
-            return validFilePaths.contains(pathname.getAbsolutePath()) &&
-                    isApplicableAsModifiedFile(pathname);
-        } catch (Exception e) {
-            return false;
-        }
+        return validFilePaths.contains(pathname.getAbsolutePath()) && isApplicableAsModifiedFile(pathname);
     }
 
-    private boolean isApplicableAsModifiedFile(File file) throws InterruptedException, IOException {
-        return file != null && isApplicableAsModifiedFile(new FilePath(file));
-    }
-
-    private boolean isApplicableAsModifiedFile(FilePath filePath) throws InterruptedException, IOException{
-        if(StringUtils.isBlank(lastModified)){
-            //the modified field is not used so we return true
-            return true;
-        }
-        int lastModifiedIntValue = getLastModifiedIntValue();
-        long diffInMillis = new Date().getTime() - filePath.lastModified();
-        long diffInHour = diffInMillis / DateUtils.MILLIS_PER_HOUR;
-        
-        return diffInHour <= lastModifiedIntValue;
-    }
-
-    private int getLastModifiedIntValue(){
-        try{
-            int m = Integer.parseInt(this.lastModified);
-            if(m <= 0){
-                throw new XrayJenkinsGenericException("last modified value must be a positive integer");
-            }
-            return m;
-        } catch (NumberFormatException e){
-            throw new XrayJenkinsGenericException("last modified value is not an integer");
-        }
+    private boolean isApplicableAsModifiedFile(File pathname) {
+        return pathname != null && FileUtils.isApplicableAsModifiedFile(new FilePath(pathname), this.lastModified);
     }
 }

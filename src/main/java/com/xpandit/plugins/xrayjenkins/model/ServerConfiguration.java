@@ -56,12 +56,12 @@ public class ServerConfiguration extends GlobalConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(ServerConfiguration.class);
 
     private List<XrayInstance> serverInstances = new ArrayList<>();
-	
+
 	public ServerConfiguration(){
 		load();
         checkForCompatibility();
 	}
-	
+
 	@Override
     public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
         checkInvalidCloudCredentials(formData);
@@ -113,7 +113,7 @@ public class ServerConfiguration extends GlobalConfiguration {
     public String getServerHostingTypeName(){
         return HostingType.getServerHostingName();
     }
-	
+
 	public static ServerConfiguration get() {
 	    return GlobalConfiguration.all().get(ServerConfiguration.class);
 	}
@@ -134,7 +134,7 @@ public class ServerConfiguration extends GlobalConfiguration {
         if (StringUtils.isBlank(value)) {
             return FormValidation.warning("Leave the credentials field empty if you want to pick user scoped credentials for each Build Task.");
         }
-        
+
         if (!credentialExists(item, value)) {
             return FormValidation.error("Cannot find currently selected credentials");
         }
@@ -156,12 +156,19 @@ public class ServerConfiguration extends GlobalConfiguration {
         // We only need to check the URL for Server instances, since Cloud API URL is hardcoded and controlled by us.
         if (Objects.equals(hosting, HostingType.SERVER.toString()) && StringUtils.isNotBlank(serverAddress)) {
             HttpRequestProvider.ProxyBean proxyBean = ProxyUtil.createProxyBean();
-            boolean isJiraInstance = ClientFactory.getServerClientWithoutCredentials(serverAddress, proxyBean)
-                    .map(XrayClient::isJiraInstance)
-                    .orElse(Boolean.FALSE);
+            Optional<ConnectionResult> jiraInstanceConnection = ClientFactory.getServerClientWithoutCredentials(serverAddress, proxyBean)
+                    .map(XrayClient::isJiraInstance);
 
+            boolean isJiraInstance = jiraInstanceConnection
+                    .map(ConnectionResult::isSuccessful)
+                    .orElse(Boolean.FALSE);
             if (!isJiraInstance) {
-                logger.error("URL provided is not from a Jira instance -> {}/rest/api/2/serverInfo didn't return a valid result.", serverAddress);
+                String statusCode = jiraInstanceConnection
+                        .flatMap(ConnectionResult::getStatusCode)
+                        .map(String::valueOf)
+                        .orElse("N/A");
+
+                logger.error("URL provided is not from a Jira instance -> [status code: {}] {}/rest/api/2/serverInfo didn't return a valid result.", statusCode, serverAddress);
                 return FormValidation.error("URL provided is not from a Jira instance (check if your /serverInfo endpoint is not blocked)");
             }
         }
@@ -227,8 +234,16 @@ public class ServerConfiguration extends GlobalConfiguration {
     }
 
     private ConnectionResult jiraServerTestConnection(String serverAddress, XrayServerCredentials xrayClient) {
-        if (!xrayClient.isJiraInstance()) {
-            logger.error("URL provided is not from a Jira instance -> {}/rest/api/2/serverInfo didn't return a valid result.", serverAddress);
+        ConnectionResult jiraInstanceConnection = xrayClient.isJiraInstance();
+
+        boolean isJiraInstance = jiraInstanceConnection.isSuccessful();
+
+        if (!isJiraInstance) {
+            String statusCode = jiraInstanceConnection.getStatusCode()
+                    .map(String::valueOf)
+                    .orElse("N/A");
+
+            logger.error("URL provided is not from a Jira instance -> [status code: {}] {}/rest/api/2/serverInfo didn't return a valid result.", statusCode, serverAddress);
             return ConnectionResult.connectionFailed("URL provided is not from a Jira instance (check if your /serverInfo endpoint is not blocked)");
         } else {
             return xrayClient.testConnection();
@@ -246,7 +261,7 @@ public class ServerConfiguration extends GlobalConfiguration {
             }
         }
     }
-    
+
     @Nullable
     private StandardCredentials findCredential(@Nullable final Item item, @Nullable final String credentialId) {
 	    if (StringUtils.isBlank(credentialId)) {

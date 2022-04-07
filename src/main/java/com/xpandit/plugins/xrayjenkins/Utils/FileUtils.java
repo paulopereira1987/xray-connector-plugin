@@ -5,6 +5,7 @@ import com.xpandit.plugins.xrayjenkins.exceptions.XrayJenkinsGenericException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import java.util.Date;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +21,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.time.DateUtils;
 
 public class FileUtils {
     private static String FEATURE_FILE_EXTENSION = ".feature";
@@ -62,7 +64,7 @@ public class FileUtils {
         }
         List<FilePath> paths = new ArrayList<>();
         FilePath filePath = readFile(workspace, path, listener);
-        
+
         if (filePath.isDirectory()) {
             paths.addAll(Arrays.asList(filePath.list("*" + FEATURE_FILE_EXTENSION, "", false)));
             List<FilePath> children = filePath.list();
@@ -76,10 +78,10 @@ public class FileUtils {
         } else {
             throw new XrayJenkinsGenericException("The path is not a folder or a single feature file");
         }
-        
+
         return paths;
     }
-    
+
     private static boolean isFeatureFile(FilePath filePath) throws IOException, InterruptedException {
         return filePath.exists() && StringUtils.endsWith(filePath.getName(), FEATURE_FILE_EXTENSION);
     }
@@ -199,6 +201,42 @@ public class FileUtils {
         FilePath f = new FilePath(workspace, filePath);
         listener.getLogger().println("File: " + f.getRemote());
         return f;
+    }
+
+    /**
+     * Checks if a given file was modified at least 'lastModified' ago.
+     * If 'lastModified' is empty or null, then we always return true.
+     *
+     * @param filePath the file to check.
+     * @param lastModified the time threshold.
+     * @return true, if 'lastModified' is blank or if the file was modified LESS than this value. False otherwise.
+     */
+    public static boolean isApplicableAsModifiedFile(FilePath filePath, String lastModified) {
+        try {
+            if(StringUtils.isBlank(lastModified)){
+                //the modified field is not used so we return true
+                return true;
+            }
+            int lastModifiedIntValue = getLastModifiedIntValue(lastModified);
+            long diffInMillis = new Date().getTime() - filePath.lastModified();
+            long diffInHour = diffInMillis / DateUtils.MILLIS_PER_HOUR;
+
+            return diffInHour <= lastModifiedIntValue;
+        } catch (IOException | InterruptedException e) {
+            return false;
+        }
+    }
+
+    private static int getLastModifiedIntValue(String lastModified){
+        try{
+            int m = Integer.parseInt(lastModified);
+            if(m <= 0){
+                throw new XrayJenkinsGenericException("last modified value must be a positive integer");
+            }
+            return m;
+        } catch (NumberFormatException e){
+            throw new XrayJenkinsGenericException("last modified value is not an integer");
+        }
     }
 
 }
