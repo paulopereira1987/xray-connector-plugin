@@ -31,9 +31,13 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.DirScanner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -241,17 +245,25 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             FileStream preconditionsFile = null;
 
             Path path = Paths.get(this.folderPath);
-            FilePath base = workspace;
-            if (path.isAbsolute()) {
-                base = new FilePath(path.toFile());
-            }
+            FilePath base = getBaseFilePath(workspace, path);
 
             validFilePaths.forEach(filePath -> listener.getLogger().println("File found: " + filePath));
             listener.getLogger()
-                    .println(
-                            "Creating zip to import feature files. This may take a while if you have a big number of files.");
+                    .println("Creating zip to import feature files. This may take a while if you have a big number of files.");
 
-            base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
+            if (path.isAbsolute() && Files.isRegularFile(path)) {
+                base.zip(zipFile.write(), new OnlyFeatureFilesInPathFilter(validFilePaths, lastModified));
+            } else {
+                final String acceptedGlobs = FileUtils.getFeatureFilesFromWorkspace(workspace, this.folderPath, listener)
+                        .stream()
+                        .filter(featureFile -> FileUtils.isApplicableAsModifiedFile(featureFile, this.lastModified))
+                        .map(FilePath::getRemote)
+                        .map(p -> p.replace(base.getRemote(), ""))
+                        .map(p -> StringUtils.removeStart(p, File.separator))
+                        .collect(Collectors.joining(","));
+
+                base.zip(zipFile.write(), new DirScanner.Glob(acceptedGlobs, "", false));
+            }
 
             if (StringUtils.isNotBlank(this.testInfo)) {
 
@@ -291,6 +303,18 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             listener.error(e.getMessage());
             throw new AbortException(e.getMessage());
         }
+    }
+
+    private FilePath getBaseFilePath(FilePath workspace, Path path) {
+        if (path.isAbsolute()) {
+            return new FilePath(path.toFile());
+        }
+
+        if (StringUtils.isNotBlank(this.folderPath) && Files.isDirectory(path)) {
+            return workspace.child(this.folderPath);
+        }
+
+        return workspace;
     }
 
     private FilePath getFile(
@@ -334,7 +358,7 @@ public class XrayImportFeatureBuilder extends Builder implements SimpleBuildStep
             listener.getLogger().println("Waiting 10 seconds to finish the zip before making the request");
             Thread.sleep(ZIP_WAIT_TIME_MILLISECONDS);
         }
-        
+
         FileStream zipFileStream = new FileStream(
                 zipFile.getName(),
                 zipFile.read(),
